@@ -1,0 +1,27 @@
+[project]
+name = "moroccan-car-prices"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Alae", email = "yuziful572@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+    "pandas>=3.0.5",
+    "selectolax>=0.4.11",
+]
+
+[project.scripts]
+moroccan-car-prices = "moroccan_car_prices:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.3",
+]
