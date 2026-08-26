@@ -1,9 +1,12 @@
 .venv/
 venv/
-data/
+/data/
 models/*.pkl
 *.db
 .env
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+explore_json.py
+next_data_sample.json
+ad_object.json

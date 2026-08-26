@@ -1,0 +1,178 @@
+"""Clean raw search listings into an analysis-ready table.
+
+Reads  : search_listings (raw, exactly as scraped)
+Writes : data/processed/listings_clean.parquet
+
+Every rule here is a judgement call, documented inline. The raw table is never
+modified, so rules can be revised and this script re-run in seconds.
+"""
+
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from src.scraper.store import connect
+
+OUT_PATH = Path("data/processed/listings_clean.parquet")
+CURRENT_YEAR = 2026
+
+# --- thresholds -------------------------------------------------------------
+# Below this, listings are contact-bait: sellers put 1 DH to win the
+# "sort by price ascending" filter. Same intent as "prix à débattre".
+PRICE_MIN = 5_000
+# Above this, values are Moroccan phone numbers typed into the price field
+# (e.g. title "06XXXXXXXX", price 6XXXXXXXX) or extra-zero typos.
+# A genuine Moroccan car ceiling is ~3-5M DH.
+PRICE_MAX = 5_000_000
+
+# A car older than this with sub-1000 km is not credible -> treat as missing.
+IMPLAUSIBLE_MILEAGE_KM = 1_000
+IMPLAUSIBLE_AGE_YEARS = 2
+MILEAGE_MAX_KM = 800_000
+
+
+def load_raw() -> pd.DataFrame:
+    conn = connect()
+    df = pd.read_sql("SELECT * FROM search_listings", conn)
+    conn.close()
+    return df
+
+
+def clean_year(df: pd.DataFrame) -> pd.DataFrame:
+    """`year` is NOT numeric: 81 rows hold the string "1980 ou plus ancien".
+
+    Naive pd.to_numeric would silently NaN exactly the oldest cars, where age
+    matters most. Map to 1980 and flag it, so the model can learn that these
+    are censored rather than precise.
+    """
+    raw = df["year"].astype("string")
+    df["year_is_capped"] = raw.str.contains("ancien", case=False, na=False).astype(int)
+    df["year"] = pd.to_numeric(raw.where(df["year_is_capped"] == 0, "1980"),
+                               errors="coerce")
+    df["age"] = CURRENT_YEAR - df["year"]
+    return df
+
+
+def clean_price(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """Drop rows with no usable target. You cannot impute y."""
+    n0 = len(df)
+    dropped = {}
+
+    df = df[df["price_mad"].notna()]
+    dropped["no_price"] = n0 - len(df)
+
+    n1 = len(df)
+    df = df[df["price_mad"] >= PRICE_MIN]
+    dropped["price_too_low"] = n1 - len(df)
+
+    n2 = len(df)
+    df = df[df["price_mad"] <= PRICE_MAX]
+    dropped["price_too_high"] = n2 - len(df)
+
+    return df, dropped
+
+
+def clean_mileage(df: pd.DataFrame) -> pd.DataFrame:
+    """Implausible mileage becomes NaN, not an imputed value.
+
+    NOTE: we do NOT multiply sub-1000 values by 1000. Inspection showed a 2001
+    Bora at 336 km and a 2000 car at 17 km — these are blank/junk entries, not
+    values expressed in thousands. Treating them as missing is honest; guessing
+    a magnitude would fabricate data. LightGBM handles NaN natively.
+    """
+    df["mileage_km"] = pd.to_numeric(df["mileage_km"], errors="coerce")
+
+    implausible_low = (
+        (df["mileage_km"] < IMPLAUSIBLE_MILEAGE_KM)
+        & (df["age"] > IMPLAUSIBLE_AGE_YEARS)
+    )
+    implausible_high = df["mileage_km"] > MILEAGE_MAX_KM
+
+    df["mileage_was_implausible"] = (implausible_low | implausible_high).astype(int)
+    df.loc[implausible_low | implausible_high, "mileage_km"] = np.nan
+
+    # Key feature: usage intensity. A 2015 car at 60k km is a different object
+    # from a 2015 car at 300k km.
+    df["km_per_year"] = df["mileage_km"] / df["age"].clip(lower=1)
+    return df
+
+
+def clean_flags(df: pd.DataFrame) -> pd.DataFrame:
+    """is_premium is 98.9% NULL — but there are zero explicit 0s.
+
+    The source omits the key when false rather than sending false. So NULL means
+    "not premium", not "unknown". Filling with 0 recovers a real feature
+    instead of dropping the column.
+    """
+    for col in ("is_premium", "is_urgent", "is_highlighted",
+                "is_shop", "is_car_checked"):
+        if col in df.columns:
+            df[col] = df[col].fillna(0).astype(int)
+
+    df["is_dealer"] = (df["seller_type"].str.upper() == "STORE").astype(int)
+    return df
+
+
+def clean_categoricals(df: pd.DataFrame) -> pd.DataFrame:
+    for col in ("fuel", "transmission", "city"):
+        df[col] = df[col].astype("string").str.strip().str.title()
+
+    # Frequency encoding: how liquid is this city's market?
+    df["city_freq"] = df["city"].map(df["city"].value_counts())
+    return df
+
+
+def add_targets(df: pd.DataFrame) -> pd.DataFrame:
+    """Train on log(price): car prices are heavily right-skewed, and errors
+    should be proportional, not absolute. Exponentiate at predict time."""
+    df["log_price"] = np.log1p(df["price_mad"])
+    return df
+
+
+def clean(verbose: bool = True) -> pd.DataFrame:
+    df = load_raw()
+    n_raw = len(df)
+
+    df = clean_year(df)
+    df, dropped = clean_price(df)
+    df = clean_mileage(df)
+    df = clean_flags(df)
+    df = clean_categoricals(df)
+    df = add_targets(df)
+
+    keep = [
+        "listing_id", "url", "title",
+        "price_mad", "log_price",
+        "year", "age", "year_is_capped",
+        "mileage_km", "km_per_year", "mileage_was_implausible",
+        "fuel", "transmission",
+        "city", "city_id", "city_freq",
+        "seller_type", "is_dealer", "is_shop",
+        "is_premium", "is_urgent", "is_highlighted", "is_car_checked",
+        "n_photos", "search_page", "scraped_at",
+    ]
+    df = df[[c for c in keep if c in df.columns]].reset_index(drop=True)
+
+    if verbose:
+        print(f"raw rows                 {n_raw:>7,}")
+        for reason, n in dropped.items():
+            print(f"  dropped {reason:<16} {n:>7,}")
+        print(f"clean rows               {len(df):>7,}  "
+              f"({len(df)/n_raw:.1%} of raw)")
+        print()
+        print(f"price   median {df.price_mad.median():>10,.0f} DH   "
+              f"IQR {df.price_mad.quantile(.25):,.0f}–{df.price_mad.quantile(.75):,.0f}")
+        print(f"age     median {df.age.median():>10.0f} yrs")
+        print(f"mileage median {df.mileage_km.median():>10,.0f} km   "
+              f"missing {df.mileage_km.isna().mean():.1%}")
+        print(f"dealers        {df.is_dealer.mean():>10.1%}")
+
+    return df
+
+
+if __name__ == "__main__":
+    df = clean()
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(OUT_PATH, index=False)
+    print(f"\nwrote {OUT_PATH}  ({len(df):,} rows, {len(df.columns)} cols)")
