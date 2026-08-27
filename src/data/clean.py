@@ -26,6 +26,23 @@ PRICE_MIN = 5_000
 # A genuine Moroccan car ceiling is ~3-5M DH.
 PRICE_MAX = 5_000_000
 
+# Age-aware placeholder rule. Found via error analysis: the model's worst
+# predictions were recent cars at absurd prices — a 2024 Tiguan R.LINE at
+# 5,555 DH, a 2026 GWM Tank 500 at 6,300 DH, a 2022 Kia Picanto at 11,500 DH.
+# Same contact-bait intent as the 1 DH listings above, just using less obvious
+# numbers (5,555 / 10,101 / 11,111) that cleared the flat PRICE_MIN floor.
+#
+# Deliberately age-aware, not a higher flat floor: raising PRICE_MIN to 30,000
+# would delete genuinely cheap old cars (a 1987 Peugeot 205 at 10,000 DH and a
+# 1998 Renault R11 at 8,500 DH are real prices). The signal is price relative
+# to age, not price alone.
+#
+# Cost: 130 rows = 0.57% of the dataset, and widening the band barely moves
+# that (age<=8 & price<25,000 catches 119; price<40,000 catches 138), which
+# says the cutoff sits in empty territory rather than slicing real listings.
+PLACEHOLDER_MAX_AGE = 8
+PLACEHOLDER_MIN_PRICE = 30_000
+
 # A car older than this with sub-1000 km is not credible -> treat as missing.
 IMPLAUSIBLE_MILEAGE_KM = 1_000
 IMPLAUSIBLE_AGE_YEARS = 2
@@ -55,7 +72,10 @@ def clean_year(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def clean_price(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    """Drop rows with no usable target. You cannot impute y."""
+    """Drop rows with no usable target. You cannot impute y.
+
+    Runs after clean_year because the placeholder rule below needs `age`.
+    """
     n0 = len(df)
     dropped = {}
 
@@ -69,6 +89,17 @@ def clean_price(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     n2 = len(df)
     df = df[df["price_mad"] <= PRICE_MAX]
     dropped["price_too_high"] = n2 - len(df)
+
+    # Recent car at an impossible price -> placeholder, not a real listing.
+    # NaN age compares False, so rows with an unparseable year are kept
+    # rather than silently dropped by a rule that cannot evaluate them.
+    n3 = len(df)
+    placeholder = (
+        (df["age"] <= PLACEHOLDER_MAX_AGE)
+        & (df["price_mad"] < PLACEHOLDER_MIN_PRICE)
+    )
+    df = df[~placeholder]
+    dropped["placeholder_price"] = n3 - len(df)
 
     return df, dropped
 
@@ -157,7 +188,7 @@ def clean(verbose: bool = True) -> pd.DataFrame:
     if verbose:
         print(f"raw rows                 {n_raw:>7,}")
         for reason, n in dropped.items():
-            print(f"  dropped {reason:<16} {n:>7,}")
+            print(f"  dropped {reason:<18} {n:>7,}")
         print(f"clean rows               {len(df):>7,}  "
               f"({len(df)/n_raw:.1%} of raw)")
         print()
