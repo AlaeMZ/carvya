@@ -1,0 +1,27 @@
+# Keeps the build context small and avoids shipping data/secrets into the
+# image. Without this, `docker build` uploads the entire project including
+# data/raw/ (cached HTML, the SQLite DB) -- hundreds of MB that the API
+# never touches.
+
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+data/
+notebooks/
+tests/
+.ipynb_checkpoints/
+
+.git/
+.gitignore
+.github/
+
+*.md
+!README.md
+
+.env
+.DS_Store
+Dockerfile
+.dockerignore
