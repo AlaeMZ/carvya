@@ -43,6 +43,32 @@ PRICE_MAX = 5_000_000
 PLACEHOLDER_MAX_AGE = 8
 PLACEHOLDER_MIN_PRICE = 30_000
 
+# Peer-ratio rule for absurdly HIGH prices. The mirror image of the
+# placeholder rule above, and found the same way: a 2018 Golf appeared in
+# the data at 2,700,000 DH, which the model duly learned from.
+#
+# The mechanism is Moroccan-specific and worth naming. One flagged row
+# reads "Dacia Logan à vendre, prix convenable 13 millions" with a price
+# of 1,300,000 — the seller means 13 million CENTIMES (1 DH = 100
+# centimes), i.e. 130,000 DH, which is normal Moroccan speech for car
+# prices. Entered into a dirham field, it inflates by ~10x. That is why
+# the flagged ratios cluster tightly around 10-11x rather than spreading
+# out.
+#
+# PRICE_MAX cannot catch these: 780,000 DH for a 2011 Dacia Logan is
+# absurd but nowhere near the 5,000,000 phone-number ceiling. The signal
+# is price relative to the same brand+model+year PEER GROUP, not price
+# in absolute terms.
+#
+# Cost: 105 rows = 0.46%. Inspection showed zero legitimate cars in the
+# flagged set. The threshold is safe because the distribution is bimodal:
+# >3x flags 110 rows and >8x flags 91, so almost nothing sits in the
+# "moderately expensive" zone — a genuine high-trim variant runs 2-3x its
+# peer median, never 10x.
+PEER_RATIO_MAX = 5.0
+# Below this many peers, the group median is too noisy to judge against.
+PEER_MIN_COUNT = 5
+
 # A car older than this with sub-1000 km is not credible -> treat as missing.
 IMPLAUSIBLE_MILEAGE_KM = 1_000
 IMPLAUSIBLE_AGE_YEARS = 2
@@ -102,6 +128,39 @@ def clean_price(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     dropped["placeholder_price"] = n3 - len(df)
 
     return df, dropped
+
+
+def drop_peer_outliers(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Drop prices absurdly high relative to their brand+model+year peers.
+
+    Needs brand/model, so it imports the extractors rather than relying on
+    those columns already existing. They are computed here and dropped
+    again -- clean.py's contract is to emit the raw-ish analysis table,
+    and features.py owns brand/model as a feature concern.
+
+    Rows in a peer group smaller than PEER_MIN_COUNT are never dropped:
+    a median over 2 cars is not evidence, and dropping against it would
+    be guessing rather than measuring.
+    """
+    from src.data.features import extract_brand, extract_model
+
+    brand = df["title"].apply(extract_brand)
+    model = [
+        extract_model(t, b) if b else None
+        for t, b in zip(df["title"], brand)
+    ]
+    tmp = df.assign(_brand=brand.values, _model=model)
+
+    grp = tmp.groupby(["_brand", "_model", "year"])["price_mad"]
+    peer_median = grp.transform("median")
+    peer_count = grp.transform("count")
+
+    outlier = (
+        (peer_count >= PEER_MIN_COUNT)
+        & (df["price_mad"] > PEER_RATIO_MAX * peer_median)
+    ).fillna(False)
+
+    return df[~outlier], int(outlier.sum())
 
 
 def clean_mileage(df: pd.DataFrame) -> pd.DataFrame:
@@ -167,6 +226,8 @@ def clean(verbose: bool = True) -> pd.DataFrame:
 
     df = clean_year(df)
     df, dropped = clean_price(df)
+    df, n_peer = drop_peer_outliers(df)
+    dropped["peer_price_outlier"] = n_peer
     df = clean_mileage(df)
     df = clean_flags(df)
     df = clean_categoricals(df)
