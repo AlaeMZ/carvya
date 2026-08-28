@@ -1474,6 +1474,7 @@ source = { editable = "." }
 dependencies = [
     { name = "httpx" },
     { name = "ipykernel" },
+    { name = "joblib" },
     { name = "jupyter" },
     { name = "lightgbm" },
     { name = "matplotlib" },
@@ -1496,6 +1497,7 @@ dev = [
 requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "ipykernel", specifier = ">=7.3.0" },
+    { name = "joblib", specifier = ">=1.5.3" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "lightgbm", specifier = ">=4.7.0" },
     { name = "matplotlib", specifier = ">=3.11.1" },

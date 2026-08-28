@@ -204,6 +204,14 @@ BRAND_MODELS: dict[str, list[str]] = {
 }
 
 _BRAND_MODEL_PATTERNS: dict[str, re.Pattern] = {}
+# Canonical casing for model names, keyed by accent-stripped lowercase.
+# Same bug class as _BRAND_CANONICAL: without this, extract_model returns
+# whatever case the seller typed, so "Classe C", "CLASSE C", "classe c"
+# and "classe C" become four separate categories. That silently splits
+# model_frequency (a real C-Class count of 30 reported as 23) and
+# fragments any groupby on model.
+_MODEL_CANONICAL: dict[str, str] = {}
+
 for _brand, _models in BRAND_MODELS.items():
     _sorted_models = sorted(
         (_strip_accents(m) for m in _models), key=len, reverse=True
@@ -212,6 +220,8 @@ for _brand, _models in BRAND_MODELS.items():
     _BRAND_MODEL_PATTERNS[_brand] = re.compile(
         r"\b(" + "|".join(_escaped) + r")\b", flags=re.IGNORECASE
     )
+    for _m in _models:
+        _MODEL_CANONICAL.setdefault(_strip_accents(_m).lower(), _m)
 
 
 def extract_model(title: str, brand: str | None) -> str | None:
@@ -222,13 +232,21 @@ def extract_model(title: str, brand: str | None) -> str | None:
     intentional. Searching a brand-scoped list avoids the cross-brand
     collisions a global model search would hit (e.g. "Classe" meaning
     nothing outside Mercedes-Benz).
+
+    The returned string is canonically cased via _MODEL_CANONICAL, not
+    echoed back from the title, so seller capitalisation cannot fragment
+    one model into several categories.
     """
     if not isinstance(title, str) or brand not in _BRAND_MODEL_PATTERNS:
         return None
 
     stripped_title = _strip_accents(title)
     match = _BRAND_MODEL_PATTERNS[brand].search(stripped_title)
-    return match.group(1) if match else None
+    if not match:
+        return None
+
+    found = match.group(1)
+    return _MODEL_CANONICAL.get(found.lower(), found)
 
 
 def _build_pattern() -> re.Pattern:
