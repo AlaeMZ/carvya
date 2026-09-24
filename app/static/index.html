@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carvya — Estimateur de prix, voitures d'occasion Maroc</title>
+<link rel="icon" type="image/png" href="/static/media/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css?v=21">
+</head>
+<body>
+
+<div class="bg-glow" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="brand-mark" src="/static/media/logo.png" alt="" width="85" height="20" aria-hidden="true">
+    <span class="brand-name">Car<span class="accent">vya</span></span>
+  </div>
+  <div class="topbar-right">
+    <a href="#predictForm" class="nav-cta">Estimer</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Changer de thème" title="Changer de thème">
+      <svg id="iconSun" viewBox="0 0 24 24" width="15" height="15"><path d="M12 4V2M12 22v-2M4.93 4.93 3.51 3.51M20.49 20.49l-1.42-1.42M4 12H2M22 12h-2M4.93 19.07l-1.42 1.42M20.49 3.51l-1.42 1.42M12 17a5 5 0 100-10 5 5 0 000 10z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+      <svg id="iconMoon" viewBox="0 0 24 24" width="15" height="15" style="display:none"><path d="M20 14.5A8.5 8.5 0 019.5 4 8.5 8.5 0 1020 14.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="layout">
+
+  <section class="hero-media">
+    <video
+      class="hero-media-video"
+      src="/static/media/hero-car.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      aria-hidden="true"
+    ></video>
+    <div class="hero-media-scrim" aria-hidden="true"></div>
+    <div class="hero-media-content">
+      <span class="eyebrow" data-reveal>Gratuit · Instantané · Basé sur des milliers d'annonces</span>
+      <h1 data-reveal-words>Le juste prix, en un clic.</h1>
+    </div>
+  </section>
+
+  <section class="hero-intro">
+    <p class="hero-sub" data-reveal>
+      Estimation entraînée sur <strong>22&nbsp;564</strong> annonces réelles.
+      Le modèle renvoie une <strong>fourchette</strong>, pas un chiffre unique —
+      une précision au dirham serait malhonnête.
+    </p>
+    <a href="#predictForm" class="hero-cta" data-reveal>
+      Estimer mon véhicule
+      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    </a>
+  </section>
+
+  <section class="rise-wrap">
+    <div class="rise-sticky">
+      <span class="rise-bg-text">22&nbsp;564</span>
+      <img class="rise-car" src="/static/media/hero-car-top.png?v=2" alt="Vue du dessus d'une voiture" loading="lazy">
+    </div>
+  </section>
+
+  <div class="stat-row">
+    <div class="stat-tile stat-tile-primary" data-reveal>
+      <span class="stat-value">22&nbsp;564</span>
+      <span class="stat-label">annonces analysées</span>
+    </div>
+    <div class="stat-tile stat-tile-dark" data-reveal>
+      <span class="stat-value">13,5&nbsp;%</span>
+      <span class="stat-label">erreur médiane</span>
+    </div>
+    <div class="stat-tile stat-tile-light" data-reveal>
+      <span class="stat-value">82&nbsp;%</span>
+      <span class="stat-label">marque détectée</span>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <form class="card form-card" id="predictForm" data-reveal autocomplete="off">
+      <div class="card-head">
+        <h2>Détails du véhicule</h2>
+        <span class="card-hint">Plus vous en savez, plus la fourchette est précise</span>
+      </div>
+
+      <div class="field-grid">
+
+        <div class="field">
+          <label for="brand">Marque</label>
+          <select id="brand" name="brand">
+            <option value="">— Non renseigné —</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="model">Modèle</label>
+          <select id="model" name="model" disabled>
+            <option value="">— Sélectionnez une marque —</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="year">Année <span class="req">*</span></label>
+          <input type="number" id="year" name="year" min="1970" max="2027" value="2019" required>
+        </div>
+
+        <div class="field">
+          <label for="mileage">Kilométrage <span class="unit">km</span></label>
+          <input type="number" id="mileage" name="mileage" min="0" max="1000000" step="1000" value="90000" placeholder="ex. 90000">
+        </div>
+
+        <div class="field">
+          <label for="fuel">Carburant</label>
+          <select id="fuel" name="fuel">
+            <option value="">— Non renseigné —</option>
+            <option value="Diesel" selected>Diesel</option>
+            <option value="Essence">Essence</option>
+            <option value="Hybride">Hybride</option>
+            <option value="Electrique">Électrique</option>
+            <option value="Lpg">LPG</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="transmission">Transmission</label>
+          <select id="transmission" name="transmission">
+            <option value="">— Non renseigné —</option>
+            <option value="Manuelle" selected>Manuelle</option>
+            <option value="Automatique">Automatique</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="city">Ville</label>
+          <select id="city" name="city">
+            <option value="">— Non renseigné —</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="photos">Photos de l'annonce</label>
+          <input type="number" id="photos" name="photos" min="0" max="50" value="6">
+        </div>
+
+        <div class="field field-toggle">
+          <label>Vendeur</label>
+          <div class="segmented" id="dealerToggle" role="radiogroup" aria-label="Type de vendeur">
+            <button type="button" class="seg-btn active" data-value="0" role="radio" aria-checked="true">Particulier</button>
+            <button type="button" class="seg-btn" data-value="1" role="radio" aria-checked="false">Professionnel</button>
+          </div>
+          <input type="hidden" id="isDealer" value="0">
+        </div>
+
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span class="btn-label">Estimer le prix</span>
+        <svg class="btn-spinner" viewBox="0 0 24 24" width="18" height="18" style="display:none">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="42 100"/>
+        </svg>
+      </button>
+
+      <p class="error-msg" id="formError" role="alert"></p>
+    </form>
+
+    <div class="card result-card" id="resultCard" data-reveal style="transition-delay:.1s">
+      <div class="result-empty" id="resultEmpty">
+        <div class="empty-illustration" aria-hidden="true">🏎️</div>
+        <p>Renseignez les détails du véhicule pour obtenir une estimation.</p>
+      </div>
+
+      <div class="result-content" id="resultContent" hidden>
+        <div class="confidence-row">
+          <span class="confidence-badge" id="confidenceBadge">
+            <span class="dot"></span>
+            <span id="confidenceLabel">—</span>
+          </span>
+        </div>
+
+        <div class="price-tile">
+          <span class="price-tile-label">Estimation</span>
+          <span class="price-tile-value" id="estimateMain">—</span>
+          <span class="price-tile-sub" id="typicalError"></span>
+        </div>
+
+        <div class="bounds-row">
+          <div class="bound-tile">
+            <span class="bound-tile-label">Bas</span>
+            <span class="bound-tile-value" id="rangeLow">—</span>
+          </div>
+          <div class="bound-tile">
+            <span class="bound-tile-label">Haut</span>
+            <span class="bound-tile-value" id="rangeHigh">—</span>
+          </div>
+        </div>
+
+        <div class="detected-row">
+          <div class="detected-chip">
+            <span class="chip-label">Marque détectée</span>
+            <span class="chip-value" id="detectedBrand">—</span>
+          </div>
+          <div class="detected-chip">
+            <span class="chip-label">Modèle détecté</span>
+            <span class="chip-value" id="detectedModel">—</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <section class="about card about-card">
+    <h2 data-reveal-words>Comment ça marche</h2>
+    <div class="about-grid">
+      <div class="about-item" data-reveal>
+        <span class="about-num">1</span>
+        <p><strong>LightGBM</strong> entraîné sur des annonces nettoyées, en log-prix
+        pour optimiser l'erreur en pourcentage plutôt qu'en dirhams absolus.</p>
+      </div>
+      <div class="about-item" data-reveal>
+        <span class="about-num">2</span>
+        <p>La fourchette s'<strong>élargit automatiquement</strong> quand la marque ou le
+        modèle ne sont pas identifiés — l'erreur mesurée y est presque deux fois plus grande.</p>
+      </div>
+      <div class="about-item" data-reveal>
+        <span class="about-num">3</span>
+        <p>Erreur médiane <strong>13,5&nbsp;%</strong> sur 22&nbsp;564 annonces. Pas de trim
+        ni de version moteur : deux Golf de finitions différentes sont vues comme la même voiture.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer" data-reveal>
+  <span>Carvya · Estimations basées sur des annonces publiques. · <a href="/docs" target="_blank" rel="noopener">API docs</a></span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script src="/static/app.js?v=8"></script>
+</body>
+</html>

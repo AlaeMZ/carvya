@@ -22,7 +22,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 sys.path.append("src")
 sys.path.append("src/models")
@@ -134,10 +138,9 @@ def predict(req: PredictionRequest) -> dict:
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@app.get("/")
-def root() -> dict:
-    return {
-        "service": "Moroccan Used Car Price Estimator",
-        "docs": "/docs",
-        "endpoints": ["/predict", "/health"],
-    }
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def root() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
