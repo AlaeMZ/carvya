@@ -96,6 +96,12 @@ class PredictionRequest(BaseModel):
     }
 
 
+class ExplanationItem(BaseModel):
+    feature: str
+    direction: str
+    magnitude: float
+
+
 class PredictionResponse(BaseModel):
     estimate_mad: float
     range_low_mad: float
@@ -104,6 +110,7 @@ class PredictionResponse(BaseModel):
     detected_brand: str | None
     detected_model: str | None
     typical_error_pct: float
+    explanation: list[ExplanationItem]
 
 
 @app.get("/health")

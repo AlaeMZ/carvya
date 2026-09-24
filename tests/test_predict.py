@@ -37,7 +37,31 @@ def test_predict_price_returns_expected_keys():
     assert set(result) == {
         "estimate_mad", "range_low_mad", "range_high_mad", "confidence",
         "detected_brand", "detected_model", "typical_error_pct",
+        "explanation",
     }
+
+
+def test_explanation_is_nonempty_and_well_formed():
+    result = predict_price(**FULL_INFO)
+    explanation = result["explanation"]
+    assert 1 <= len(explanation) <= 5
+    for item in explanation:
+        assert set(item) == {"feature", "direction", "magnitude"}
+        assert item["direction"] in {"up", "down"}
+        assert 0 <= item["magnitude"] <= 1
+    # sorted strongest-first
+    magnitudes = [item["magnitude"] for item in explanation]
+    assert magnitudes == sorted(magnitudes, reverse=True)
+
+
+def test_explanation_never_shows_an_unselected_category():
+    # Regression test: a one-hot dummy for a category the user did NOT
+    # pick (e.g. "Automatique" when transmission="Manuelle") must never
+    # appear -- it reads as if that category applied to this car.
+    result = predict_price(**FULL_INFO)
+    labels = {item["feature"] for item in result["explanation"]}
+    assert "Transmission : Automatique" not in labels
+    assert "Carburant : Essence" not in labels
 
 
 def test_range_brackets_the_point_estimate():

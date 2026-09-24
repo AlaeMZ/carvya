@@ -726,6 +726,55 @@ a:hover { text-decoration: underline; }
 .chip-value { font-size: 16px; font-weight: 600; }
 .chip-value.muted { color: var(--text-faint); font-weight: 500; }
 
+.explanation {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.explanation-title {
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--text-faint);
+}
+.explanation-list { display: flex; flex-direction: column; gap: 10px; }
+.explanation-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 16px;
+  align-items: center;
+  gap: 12px;
+}
+.explanation-label {
+  font-size: 15px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.explanation-bar {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border-soft);
+  overflow: hidden;
+}
+.explanation-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--text-dim);
+}
+.explanation-row.up .explanation-bar-fill { background: var(--accent); }
+.explanation-arrow {
+  font-size: 11px;
+  text-align: center;
+  color: var(--text-faint);
+}
+.explanation-row.up .explanation-arrow { color: var(--accent); }
+
 /* ------------------------------------------------------------------ */
 /* About section — centered display heading, thin-bordered columns    */
 /* ------------------------------------------------------------------ */

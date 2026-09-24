@@ -32,6 +32,7 @@ from feature_builder import build_matrix
 ARTIFACT_PATH = Path("models/price_model.joblib")
 
 _artifact = None
+_explainer = None
 
 
 def load_artifact(path: Path = ARTIFACT_PATH) -> dict:
@@ -47,7 +48,117 @@ def load_artifact(path: Path = ARTIFACT_PATH) -> dict:
     return _artifact
 
 
+def _get_explainer(art: dict):
+    """
+    Builds the SHAP TreeExplainer once and caches it, same reasoning as
+    load_artifact: constructing it walks the whole booster, which is
+    wasted work to repeat on every request.
+    """
+    global _explainer
+    if _explainer is None:
+        import shap
+        _explainer = shap.TreeExplainer(art["model"])
+    return _explainer
+
+
 CURRENT_YEAR = 2026
+
+# Human-readable labels for the "why this price" breakdown. Deliberately
+# excludes columns the form never actually lets a user set (is_premium,
+# is_urgent, is_highlighted, is_car_checked are hardcoded to 0 in
+# _row_from_input; year_is_capped/mileage_was_implausible are data-quality
+# flags from scraped rows) -- showing those in a per-request explanation
+# would look like a hidden factor the user has no way to act on.
+FEATURE_LABELS: dict[str, str] = {
+    "age": "Âge du véhicule",
+    "mileage_km": "Kilométrage",
+    "km_per_year": "Kilométrage annuel moyen",
+    "n_photos": "Nombre de photos",
+    "city_freq": "Popularité de la ville",
+    "brand_tier": "Gamme de la marque",
+    "city_tier": "Gamme de la ville",
+    "model_frequency": "Popularité du modèle",
+    "brand_known": "Marque identifiée",
+    "model_known": "Modèle identifié",
+    "is_dealer": "Type de vendeur",
+}
+CATEGORICAL_LABELS: dict[str, str] = {
+    "fuel": "Carburant",
+    "transmission": "Transmission",
+}
+
+
+def _humanize_feature(col: str) -> str | None:
+    """
+    Maps a raw model column name to a French label for display, or None
+    if this column should not be shown to the end user (see FEATURE_LABELS
+    docstring above).
+    """
+    if col in FEATURE_LABELS:
+        return FEATURE_LABELS[col]
+
+    for prefix, label in CATEGORICAL_LABELS.items():
+        if col.startswith(prefix + "_"):
+            value = col[len(prefix) + 1:]
+            if value == "nan":
+                return None
+            return f"{label} : {value}"
+
+    return None
+
+
+def _build_explanation(
+    art: dict, X: pd.DataFrame, X_s: np.ndarray, columns: list[str],
+    top_n: int = 5,
+) -> list[dict]:
+    """
+    Per-request SHAP breakdown of the top contributing factors, so the
+    estimate isn't a black box. SHAP values live in log-price space (the
+    model is trained on log1p(price)), so they aren't converted to a DH
+    amount -- doing that accurately would require undoing a nonlinear
+    transform per feature, which is exactly the kind of false precision
+    this project avoids elsewhere. Instead each factor gets a direction
+    and a relative magnitude bar, normalized against the strongest driver
+    for THIS prediction.
+
+    One-hot dummy columns need an extra filter X (the pre-scaling 0/1
+    matrix) does not: a categorical feature's OTHER dummy columns (e.g.
+    "transmission_Automatique" when the car is Manuelle) are 0 for this
+    row and can still carry a nonzero SHAP value -- that's the model
+    correctly using "not automatic" as information, but surfacing it
+    under the label "Transmission : Automatique" would read as if the
+    car WAS automatic. Only the dummy that is actually 1 for this row is
+    eligible to represent that categorical feature.
+    """
+    explainer = _get_explainer(art)
+    shap_values = np.asarray(explainer.shap_values(X_s))[0]
+
+    items = []
+    for col, value in zip(columns, shap_values):
+        label = _humanize_feature(col)
+        if label is None or value == 0:
+            continue
+        is_categorical_dummy = any(
+            col.startswith(prefix + "_") for prefix in CATEGORICAL_LABELS
+        )
+        if is_categorical_dummy and X[col].iloc[0] != 1:
+            continue
+        items.append({"feature": label, "shap": float(value)})
+
+    items.sort(key=lambda item: abs(item["shap"]), reverse=True)
+    top = items[:top_n]
+    if not top:
+        return []
+
+    max_abs = max(abs(item["shap"]) for item in top)
+    return [
+        {
+            "feature": item["feature"],
+            "direction": "up" if item["shap"] > 0 else "down",
+            "magnitude": round(abs(item["shap"]) / max_abs, 3),
+        }
+        for item in top
+    ]
 
 
 def _row_from_input(
@@ -155,6 +266,8 @@ def predict_price(
     else:
         confidence = "low"
 
+    explanation = _build_explanation(art, X, X_s, art["columns"])
+
     return {
         "estimate_mad": round(point, -2),
         "range_low_mad": round(max(low, 1000), -2),
@@ -163,6 +276,7 @@ def predict_price(
         "detected_brand": row["brand"].iloc[0],
         "detected_model": row["model"].iloc[0],
         "typical_error_pct": round(half_width_pct, 1),
+        "explanation": explanation,
     }
 
 

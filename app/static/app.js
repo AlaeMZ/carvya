@@ -296,6 +296,7 @@ const rangeHigh = document.getElementById("rangeHigh");
 const estimateMain = document.getElementById("estimateMain");
 const detectedBrand = document.getElementById("detectedBrand");
 const detectedModel = document.getElementById("detectedModel");
+const explanationList = document.getElementById("explanationList");
 
 const CONFIDENCE_LABELS = {
   high: "Confiance élevée",
@@ -356,6 +357,36 @@ function renderResult(data) {
   } else {
     detectedModel.textContent = "Non détecté";
     detectedModel.classList.add("muted");
+  }
+
+  renderExplanation(data.explanation || []);
+}
+
+function renderExplanation(items) {
+  explanationList.innerHTML = "";
+  for (const item of items) {
+    const row = document.createElement("div");
+    row.className = `explanation-row ${item.direction}`;
+
+    const label = document.createElement("span");
+    label.className = "explanation-label";
+    label.textContent = item.feature;
+
+    const bar = document.createElement("span");
+    bar.className = "explanation-bar";
+    const fill = document.createElement("span");
+    fill.className = "explanation-bar-fill";
+    fill.style.width = `${Math.round(item.magnitude * 100)}%`;
+    bar.appendChild(fill);
+
+    const arrow = document.createElement("span");
+    arrow.className = "explanation-arrow";
+    arrow.textContent = item.direction === "up" ? "▲" : "▼";
+
+    row.appendChild(label);
+    row.appendChild(bar);
+    row.appendChild(arrow);
+    explanationList.appendChild(row);
   }
 }
 
