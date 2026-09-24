@@ -1,5 +1,7 @@
 # Moroccan Used Car Price Prediction
 
+[![CI](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml/badge.svg)](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml)
+
 Predicts the listing price of a used car in Morocco from public Moroccan car listings.
 
 **Typical error: 13.5% median APE** (25.9% mean) across 22,564 listings.
