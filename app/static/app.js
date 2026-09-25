@@ -423,6 +423,14 @@ form.addEventListener("submit", async (e) => {
   };
 
   setLoading(true);
+  // The free-tier server spins down when idle and takes ~30-60s to wake
+  // back up on the next request. A response that's still pending after a
+  // few seconds is almost certainly a cold start, not a stuck request --
+  // say so, instead of leaving a spinner that looks broken.
+  const wakingTimer = setTimeout(() => {
+    btnLabel.textContent = "Réveil du serveur… (jusqu'à 1 min)";
+  }, 4000);
+
   try {
     const res = await fetch("/predict", {
       method: "POST",
@@ -440,6 +448,7 @@ form.addEventListener("submit", async (e) => {
   } catch (err) {
     showError(err.message || "Impossible de contacter l'API. Vérifiez qu'elle est bien démarrée.");
   } finally {
+    clearTimeout(wakingTimer);
     setLoading(false);
   }
 });
