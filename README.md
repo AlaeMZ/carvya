@@ -1,6 +1,6 @@
 # Moroccan Used Car Price Prediction
 
-**Live demo:** https://REPLACE-ME.onrender.com — the first load can take ~1 minute because the free server sleeps when idle.
+**Live demo:** https://moroccan-car-prices.vercel.app — hosted on Vercel's free tier; the first request after a quiet period can take a few seconds while the model loads.
 
 [![CI](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml/badge.svg)](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml)
 
