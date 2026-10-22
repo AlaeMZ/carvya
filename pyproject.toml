@@ -1,8 +1,9 @@
 [project]
 name = "moroccan-car-prices"
 version = "0.1.0"
-description = "Add your description here"
+description = "Used-car price estimation for the Moroccan market from self-collected public listing data"
 readme = "README.md"
+license = "MIT"
 authors = [
     { name = "Alae", email = "yuziful572@gmail.com" }
 ]

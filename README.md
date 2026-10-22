@@ -1,5 +1,7 @@
 # Moroccan Used Car Price Prediction
 
+**Live demo:** https://REPLACE-ME.onrender.com — the first load can take ~1 minute because the free server sleeps when idle.
+
 [![CI](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml/badge.svg)](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml)
 
 Predicts the listing price of a used car in Morocco from public Moroccan car listings.
@@ -415,3 +417,8 @@ uv run python src/models/train.py         # model comparison
 uv run python src/models/train_final.py   # fits and saves the artifact
 uv run python src/models/error_analysis.py
 ```
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

@@ -6,10 +6,10 @@ FastAPI service for Moroccan used-car price estimation.
 Design decisions carried over from the project notes:
   - Returns a RANGE plus a confidence flag, never a bare point estimate.
     "147,382 DH" implies a precision the model does not have (median
-    error is ~14.5%).
+    error is ~13.5%).
   - The range widens automatically when the car cannot be identified,
     because measured out-of-fold error is roughly twice as large for
-    those rows (p68 33.8% vs 18.2%).
+    those rows (p68 33.8% vs 16.5%).
   - The model artifact is loaded once at startup, not per request.
 
 Run locally:
