@@ -32,7 +32,6 @@ from feature_builder import build_matrix
 ARTIFACT_PATH = Path("models/price_model.joblib")
 
 _artifact = None
-_explainer = None
 
 
 def load_artifact(path: Path = ARTIFACT_PATH) -> dict:
@@ -46,19 +45,6 @@ def load_artifact(path: Path = ARTIFACT_PATH) -> dict:
             )
         _artifact = joblib.load(path)
     return _artifact
-
-
-def _get_explainer(art: dict):
-    """
-    Builds the SHAP TreeExplainer once and caches it, same reasoning as
-    load_artifact: constructing it walks the whole booster, which is
-    wasted work to repeat on every request.
-    """
-    global _explainer
-    if _explainer is None:
-        import shap
-        _explainer = shap.TreeExplainer(art["model"])
-    return _explainer
 
 
 CURRENT_YEAR = 2026
@@ -129,9 +115,14 @@ def _build_explanation(
     under the label "Transmission : Automatique" would read as if the
     car WAS automatic. Only the dummy that is actually 1 for this row is
     eligible to represent that categorical feature.
+
+    The SHAP values come from LightGBM's own TreeSHAP (pred_contrib=True)
+    rather than the shap package: identical numbers (pinned by
+    tests/test_shap_equivalence.py), without shap's numba/llvmlite
+    dependency chain, which alone is ~190 MB of the deployed bundle.
+    The last column is the bias term, not a feature, so it's dropped.
     """
-    explainer = _get_explainer(art)
-    shap_values = np.asarray(explainer.shap_values(X_s))[0]
+    shap_values = art["model"].predict(X_s, pred_contrib=True)[0][:-1]
 
     items = []
     for col, value in zip(columns, shap_values):

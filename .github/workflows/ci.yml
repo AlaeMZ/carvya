@@ -20,8 +20,11 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
+      # All groups, not just the defaults: tests/test_shap_equivalence.py
+      # needs shap (training group) to compare against, and would
+      # otherwise be skipped instead of run.
       - name: Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --all-groups
 
       - name: Run tests
         run: uv run pytest -v

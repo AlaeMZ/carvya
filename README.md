@@ -395,6 +395,19 @@ which is the specific check that finding 1's unit bug has not returned.
 Python 3.11, uv, httpx, selectolax, SQLite, pandas, pyarrow, scikit-learn,
 LightGBM, SHAP, FastAPI, Docker.
 
+Dependencies are split so the served app stays small:
+
+| Group | Packages | Needed for |
+|---|---|---|
+| default | fastapi, uvicorn, pandas, scikit-learn, lightgbm, joblib | serving the API |
+| `scraping` | httpx, selectolax | `src/scraper/` |
+| `training` | pyarrow, shap | reading the parquet data, `error_analysis.py` |
+| `dev` | pytest, ruff, jupyter, matplotlib, seaborn | tests, notebooks |
+
+The API's per-prediction "why this price" breakdown uses LightGBM's built-in
+TreeSHAP (`pred_contrib=True`), not the shap package. The values are identical,
+which `tests/test_shap_equivalence.py` checks.
+
 ## Layout
 
 ```
@@ -409,8 +422,10 @@ models/          price_model.joblib
 
 ## Reproducing
 
+Scraping and training need the optional dependency groups:
+
 ```bash
-uv sync
+uv sync --all-groups
 uv run python -m src.scraper.crawl        # ~45 min, hits the source site
 uv run python -m src.data.clean
 uv run python src/models/train.py         # model comparison
