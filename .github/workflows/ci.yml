@@ -18,7 +18,7 @@ jobs:
           enable-cache: true
 
       - name: Set up Python
-        run: uv python install 3.11
+        run: uv python install
 
       # All groups, not just the defaults: tests/test_shap_equivalence.py
       # needs shap (training group) to compare against, and would

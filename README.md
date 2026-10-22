@@ -392,7 +392,7 @@ which is the specific check that finding 1's unit bug has not returned.
 
 ## Stack
 
-Python 3.11, uv, httpx, selectolax, SQLite, pandas, pyarrow, scikit-learn,
+Python 3.12, uv, httpx, selectolax, SQLite, pandas, pyarrow, scikit-learn,
 LightGBM, SHAP, FastAPI, Docker.
 
 Dependencies are split so the served app stays small:
