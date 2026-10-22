@@ -16,6 +16,7 @@ Why the confidence flag:
     returning a confident-looking range of the same width.
 """
 
+import ctypes
 import sys
 from pathlib import Path
 
@@ -25,6 +26,34 @@ import pandas as pd
 
 sys.path.append("src")
 sys.path.append("src/models")
+
+VENDORED_LIBGOMP = Path(__file__).resolve().parents[2] / "vendor" / "libgomp.so.1"
+
+
+def _ensure_libgomp() -> None:
+    """
+    LightGBM's compiled library links against the OpenMP runtime
+    (libgomp.so.1). The Docker image installs it with apt, but Vercel's
+    Python runtime (Amazon Linux 2023, no Dockerfile) doesn't ship it, so
+    unpickling the model failed there with "libgomp.so.1: cannot open
+    shared object file".
+
+    Fix: if the system copy can't be found, load the vendored one (taken
+    from Amazon Linux 2023's libgomp package) with RTLD_GLOBAL before
+    lightgbm is imported. Its SONAME is libgomp.so.1, so the dynamic
+    loader then satisfies lightgbm's dependency from the already-loaded
+    copy. Must run before joblib.load, which is what imports lightgbm.
+    """
+    if not sys.platform.startswith("linux"):
+        return
+    try:
+        ctypes.CDLL("libgomp.so.1", mode=ctypes.RTLD_GLOBAL)
+    except OSError:
+        if VENDORED_LIBGOMP.exists():
+            ctypes.CDLL(str(VENDORED_LIBGOMP), mode=ctypes.RTLD_GLOBAL)
+
+
+_ensure_libgomp()
 
 from data.features import extract_brand, extract_model
 from feature_builder import build_matrix
