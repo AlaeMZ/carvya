@@ -1,5 +1,13 @@
 # Moroccan Used Car Price Prediction
 
+I built a website that estimates what a used car is worth in Morocco, trained on about 22,500 public used-car listings from Moroccan classifieds that I collected myself.
+
+Half of its estimates land within about 17,000 DH of the seller's asking price; the typical car in the data is listed at 138,000 DH.
+
+Cleaning the data helped, but less than it first appeared: most of the early improvement came from removing junk listings no model could price, not from the model getting smarter.
+
+![demo](docs/demo.gif)
+
 **Live demo:** https://moroccan-car-prices.vercel.app — hosted on Vercel's free tier; the first request after a quiet period can take a few seconds while the model loads.
 
 [![CI](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml/badge.svg)](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml)
@@ -463,6 +471,7 @@ tests/           pytest suite; fixtures/ holds synthetic scraper and cleaning da
 notebooks/       01_eda.ipynb
 models/          price_model.joblib
 vendor/          libgomp.so.1, which LightGBM needs on Vercel
+docs/            README media
 ```
 
 ## Reproducing
