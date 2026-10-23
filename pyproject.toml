@@ -5,7 +5,7 @@ description = "Used-car price estimation for the Moroccan market from self-colle
 readme = "README.md"
 license = "MIT"
 authors = [
-    { name = "Alae", email = "yuziful572@gmail.com" }
+    { name = "Alae", email = "alaemzi75@gmail.com" }
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -17,12 +17,10 @@ dependencies = [
     "uvicorn>=0.52.4",
 ]
 
-[project.scripts]
-moroccan-car-prices = "moroccan_car_prices:main"
-
-[build-system]
-requires = ["uv_build>=0.12.5,<0.13.0"]
-build-backend = "uv_build"
+# Not an installable package: scripts and the app put src/ on sys.path
+# themselves, so uv only needs to install the dependencies.
+[tool.uv]
+package = false
 
 [dependency-groups]
 dev = [
