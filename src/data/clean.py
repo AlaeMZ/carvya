@@ -97,10 +97,14 @@ def clean_year(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def clean_price(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+def clean_price(
+    df: pd.DataFrame, placeholder_rule: bool = True
+) -> tuple[pd.DataFrame, dict]:
     """Drop rows with no usable target. You cannot impute y.
 
     Runs after clean_year because the placeholder rule below needs `age`.
+    placeholder_rule=False reproduces the table from before that rule
+    existed (used by cleaning_ablation.py).
     """
     n0 = len(df)
     dropped = {}
@@ -119,6 +123,9 @@ def clean_price(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     # Recent car at an impossible price -> placeholder, not a real listing.
     # NaN age compares False, so rows with an unparseable year are kept
     # rather than silently dropped by a rule that cannot evaluate them.
+    if not placeholder_rule:
+        return df, dropped
+
     n3 = len(df)
     placeholder = (
         (df["age"] <= PLACEHOLDER_MAX_AGE)
@@ -220,14 +227,19 @@ def add_targets(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def clean(verbose: bool = True) -> pd.DataFrame:
+def clean(
+    verbose: bool = True, placeholder_rule: bool = True, peer_rule: bool = True
+) -> pd.DataFrame:
+    """Run every step. The two rule switches exist only so
+    cleaning_ablation.py can rebuild the pre-fix table; leave them on."""
     df = load_raw()
     n_raw = len(df)
 
     df = clean_year(df)
-    df, dropped = clean_price(df)
-    df, n_peer = drop_peer_outliers(df)
-    dropped["peer_price_outlier"] = n_peer
+    df, dropped = clean_price(df, placeholder_rule=placeholder_rule)
+    if peer_rule:
+        df, n_peer = drop_peer_outliers(df)
+        dropped["peer_price_outlier"] = n_peer
     df = clean_mileage(df)
     df = clean_flags(df)
     df = clean_categoricals(df)

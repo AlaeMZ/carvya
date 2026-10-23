@@ -9,8 +9,11 @@ Predicts the listing price of a used car in Morocco from public Moroccan car lis
 **Typical error: 13.5% median APE** (25.9% mean) across 22,564 listings.
 
 The data is self-collected — no Kaggle CSV. Most of the interesting work is in
-the scraping and cleaning, not the modelling: **three cleaning fixes affecting
-~1% of rows improved mean MAPE by 7.7 points, more than any modelling change.**
+the scraping and cleaning, not the modelling. Three cleaning fixes affecting
+~1% of rows took reported mean MAPE from 33.6% to 25.9%, but **most of that
+drop came from removing unpredictable junk rows from the test set. Scored on
+the same rows, the cleaner training data is worth 1.3 points of mean MAPE**
+([details](#how-much-did-the-cleaning-fixes-help)).
 
 ---
 
@@ -281,7 +284,7 @@ Without that, thousands of brand-less rows would share a `None|None|...` prefix
 and collapse into giant fake duplicate groups — a worse error than the one being
 fixed.
 
-**Measured duplication: 5.0%** (1,139 rows). Treat as a rough floor: 37% of rows
+**Measured duplication: 5.7%** (1,275 rows). Treat as a rough floor: 37% of rows
 have no model and can never be fingerprint-matched, while some flagged groups
 (`Peugeot|3008|2018|90000|Casablanca` ×8) may be coincidence rather than
 relisting.
@@ -311,34 +314,74 @@ reported number stays in real currency.
 
 ### Results
 
-5-fold `GroupKFold`, identical folds for every model:
+5-fold `GroupKFold`, identical folds for every model, all scored on the final
+cleaned data (22,564 rows). ± is the standard deviation across folds.
 
-| Model | mean MAPE | median APE |
-|---|---|---|
-| Global median baseline | 85.3% | — |
-| Group median baseline | 62.3% | 17.5% |
-| Ridge | 36.1% (±0.5) | 18.5% |
-| RandomForest | 33.8% (±0.8) | 15.6% |
-| LightGBM | 33.6% (±0.7) | 15.7% |
-| **LightGBM, after cleaning fixes** | **25.9%** | **13.5%** |
+| Model | mean MAPE | median APE | mean MAPE before cleaning fixes¹ |
+|---|---|---|---|
+| Global median baseline | 80.1% (±1.9) | 42.0% | 85.0% |
+| Group median baseline | 54.9% (±2.3) | 15.5% | 62.9% |
+| Ridge | 29.8% (±0.5) | 18.4% | 36.1% |
+| RandomForest | 26.3% (±0.6) | 14.0% | 33.8% |
+| **LightGBM** | **25.9% (±0.5)** | **13.5%** | 33.6% |
+
+¹ The same models and folds-by-fingerprint protocol, run on the table as it was
+before the three cleaning fixes (22,808 rows, rebuilt from the raw SQLite table
+by `src/models/cleaning_ablation.py`). The 244 extra rows are mostly junk prices
+no model can predict, so **this column is scored on a harder test set and is not
+directly comparable with the others** — see the next section. (An earlier
+version of this table showed 85.3% / 62.3% for the baselines; those came from a
+single `GroupShuffleSplit`, not the 5-fold CV used for the models.)
 
 **LightGBM and RandomForest are statistically indistinguishable** — the fold
-standard deviations overlap completely. This is "tree ensembles beat linear
+standard deviations overlap. This is "tree ensembles beat linear
 models", not "LightGBM won". Ridge underperforms both, consistent with the
 non-linear depreciation curves in the EDA.
 
+### How much did the cleaning fixes help?
+
+The fixes (age-aware placeholder rule, canonical model casing, peer-ratio
+outlier rule) were each found by reading the worst predictions, and together
+they took LightGBM from 33.6% to 25.9% mean MAPE. That comparison is unfair to
+the "before" model: two of the fixes delete rows, from the test folds as well
+as the training folds, and the deleted rows are exactly the ones it got most
+wrong.
+
+To separate the two effects, `cleaning_ablation.py` builds one set of 5 folds
+over the pre-fix rows and scores both pipelines on the same 22,564 rows that
+survive the fixes:
+
+| | Trained on | Scored on | mean MAPE | median APE |
+|---|---|---|---|---|
+| A | pre-fix data | all 22,808 pre-fix rows | 33.7% (±1.4) | 15.7% |
+| B | pre-fix data | the 22,564 surviving rows | 27.4% (±0.5) | 15.5% |
+| C | post-fix data | the 22,564 surviving rows | 26.1% (±0.2) | 14.0% |
+
+- **Easier test set (A → B): 6.3 points.** Most of the headline gain is
+  measurement — junk rows leaving the test folds.
+- **Better training data (B → C): 1.3 points of mean MAPE, 1.5 of median APE.**
+  Smaller, but real: C beats B on every fold (by 0.5 to 2.0 points).
+
+(A reads 33.7% rather than 33.6% because these folds group on the fixed
+fingerprint, so they differ slightly from the original run's.)
+
+For scale, on the same final data Ridge → LightGBM is worth 3.9 points of mean
+MAPE and RandomForest → LightGBM 0.4. So the cleaning fixes improved the model
+more than choosing between tree ensembles did, but less than choosing trees over
+a linear model.
+
 ### Where the models actually add value
 
-The mean improved far more than the median (62.3% → 33.6% vs 17.5% → 15.7%), and
-Ridge actually *lost* to the baseline on median. Per-segment analysis explains
-why:
+The mean improved far more than the median over the group-median baseline
+(54.9% → 25.9% vs 15.5% → 13.5%), and Ridge actually *lost* to the baseline on
+median (18.4% vs 15.5%). Per-segment analysis explains why:
 
 | Segment | Baseline MAPE | Model MAPE |
 |---|---|---|
-| brand + model + year known | 25.9% | 18.6% |
-| brand + model | 77.0% | 29.3% |
-| brand only | 107.1% | 32.2% |
-| neither | 120.0% | 42.6% |
+| brand + model + year known | 19.0% | 18.6% |
+| brand + model | 101.7% | 29.3% |
+| brand only | 102.8% | 32.2% |
+| neither | 114.8% | 42.6% |
 
 **The models rescue catastrophically mispriced rows rather than improving typical
 predictions.** A group-median lookup has nothing to say about a car it cannot
@@ -414,7 +457,7 @@ which `tests/test_shap_equivalence.py` checks.
 src/scraper/     fetch, crawl, parse, store
 src/data/        clean.py, features.py
 src/models/      baseline, feature_builder, train, train_final, predict,
-                 error_analysis
+                 error_analysis, cleaning_ablation
 app/main.py      FastAPI service
 notebooks/       01_eda.ipynb
 models/          price_model.joblib
@@ -428,7 +471,9 @@ Scraping and training need the optional dependency groups:
 uv sync --all-groups
 uv run python -m src.scraper.crawl        # ~45 min, hits the source site
 uv run python -m src.data.clean
+uv run python src/models/baseline.py      # baselines on the same folds
 uv run python src/models/train.py         # model comparison
+uv run python -m src.models.cleaning_ablation  # before/after cleaning fixes
 uv run python src/models/train_final.py   # fits and saves the artifact
 uv run python src/models/error_analysis.py
 ```

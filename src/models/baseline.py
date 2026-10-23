@@ -4,12 +4,15 @@ src/models/baseline.py
 Leakage-safe train/test split + two baseline models, to establish the
 floor any real model (Ridge/RF/LightGBM) has to beat.
 
-Why GroupShuffleSplit here, not GroupKFold:
-    GroupKFold is for k-fold CROSS-VALIDATION -- comparing several models
-    on identical folds (the decision already made for Ridge/RF/LightGBM
-    later). Right now we only need ONE train/test split to get a floor
-    MAPE number. GroupShuffleSplit gives that single split while still
-    respecting groups (a fingerprint's rows never split across train/test).
+Two evaluation modes:
+    cv_baselines() scores both baselines with the same 5-fold GroupKFold
+    that train.py uses for Ridge/RF/LightGBM, so the floor and the models
+    are compared on identical folds. This is the number to report.
+
+    baseline_report() keeps the original single GroupShuffleSplit plus the
+    per-source diagnostic. Useful for reading WHY the group median fails,
+    but its MAPE comes from a different split and is not comparable with
+    the CV table.
 
 Why two baselines, not one:
     Global median alone is nearly useless (predicts the same number for
@@ -22,7 +25,7 @@ Why two baselines, not one:
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import GroupShuffleSplit
+from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 
 import sys
 sys.path.append("src")
@@ -98,6 +101,12 @@ def group_median_baseline(train_df: pd.DataFrame, test_df: pd.DataFrame) -> floa
     alone, then the global median -- so every test row gets SOME
     prediction even if its exact combo never appeared in train.
     """
+    predictions = group_median_predict(train_df, test_df)
+    return mape(test_df["price_mad"].values, predictions)
+
+
+def group_median_predict(train_df: pd.DataFrame, test_df: pd.DataFrame) -> np.ndarray:
+    """The group-median predictions behind group_median_baseline."""
     global_median = train_df["price_mad"].median()
 
     by_bmy = train_df.groupby(["brand", "model", "year"])["price_mad"].median()
@@ -118,8 +127,7 @@ def group_median_baseline(train_df: pd.DataFrame, test_df: pd.DataFrame) -> floa
 
         return global_median
 
-    predictions = test_df.apply(predict_one, axis=1).values
-    return mape(test_df["price_mad"].values, predictions)
+    return test_df.apply(predict_one, axis=1).values.astype(float)
 
 
 def group_median_diagnostic(train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
@@ -167,6 +175,45 @@ def group_median_diagnostic(train_df: pd.DataFrame, test_df: pd.DataFrame) -> No
           f"(robust to outliers -- compare to the mean above)")
 
 
+def cv_baselines(df: pd.DataFrame, n_splits: int = 5) -> list[dict]:
+    """
+    Both baselines on 5-fold GroupKFold over the leakage fingerprint --
+    the same folds train.py uses, because GroupKFold is deterministic for
+    a given row order and grouping. Returns one dict per baseline in the
+    same shape as train.run_cv.
+    """
+    if "model" not in df.columns:
+        df = add_model_column(df)
+    if "fingerprint" not in df.columns:
+        df = build_fingerprint(df)
+
+    scores = {"Global median": ([], []), "Group median": ([], [])}
+    gkf = GroupKFold(n_splits=n_splits)
+    for train_idx, val_idx in gkf.split(df, groups=df["fingerprint"]):
+        train_df = df.iloc[train_idx]
+        val_df = df.iloc[val_idx]
+        y_true = val_df["price_mad"].values.astype(float)
+
+        preds = {
+            "Global median": np.full(len(val_df), train_df["price_mad"].median()),
+            "Group median": group_median_predict(train_df, val_df),
+        }
+        for name, y_pred in preds.items():
+            ape = np.abs((y_true - y_pred) / y_true) * 100
+            scores[name][0].append(float(np.mean(ape)))
+            scores[name][1].append(float(np.median(ape)))
+
+    return [
+        {
+            "model": name,
+            "mean_mape": float(np.mean(means)),
+            "median_ape": float(np.mean(medians)),
+            "mean_mape_std": float(np.std(means)),
+        }
+        for name, (means, medians) in scores.items()
+    ]
+
+
 def baseline_report(df: pd.DataFrame) -> None:
     train_df, test_df = leakage_safe_split(df)
     verify_no_leakage(train_df, test_df)
@@ -188,4 +235,16 @@ def baseline_report(df: pd.DataFrame) -> None:
 
 if __name__ == "__main__":
     df = pd.read_parquet("data/processed/listings_clean.parquet")
+
+    print("5-fold GroupKFold (same folds as train.py):")
+    for r in cv_baselines(df):
+        print(f"  {r['model']:<14} mean MAPE {r['mean_mape']:.1f}% "
+              f"(+/- {r['mean_mape_std']:.1f})   "
+              f"median APE {r['median_ape']:.1f}%")
+    print()
+    print("=" * 70)
+    print()
+    print("Single GroupShuffleSplit diagnostic (not comparable with the "
+          "CV numbers above):")
+    print()
     baseline_report(df)

@@ -130,8 +130,8 @@ def get_oof_predictions(df: pd.DataFrame, n_splits: int = 5) -> pd.DataFrame:
 def segment_report(oof: pd.DataFrame) -> None:
     """Prints MAPE broken down every way that matters."""
     print("1. MAPE BY PREDICTION SOURCE")
-    print("   (baseline numbers for comparison: brand+model+year 25.9%, "
-          "brand+model 77.0%, brand only 107.1%, global fallback 120.0%)")
+    print("   (group-median baseline, same folds: brand+model+year 19.0%, "
+          "brand+model 101.7%, brand only 102.8%, global fallback 114.8%)")
     seg = oof.groupby("prediction_source")["ape"].agg(
         ["count", "mean", "median"]
     ).round(1)
