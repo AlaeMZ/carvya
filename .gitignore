@@ -1,6 +1,10 @@
 .venv/
 venv/
-/data/
+# Data stays local, except one small sample of the cleaned table.
+/data/*
+!/data/sample/
+/data/sample/*
+!/data/sample/listings_sample.csv
 models/*.pkl
 *.db
 .env

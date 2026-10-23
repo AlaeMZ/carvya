@@ -470,11 +470,17 @@ app/             FastAPI service (main.py) and the static frontend
 tests/           pytest suite; fixtures/ holds synthetic scraper and cleaning data
 notebooks/       01_eda.ipynb
 models/          price_model.joblib
+data/sample/     200-row sample of the cleaned data (the rest of data/ is not committed)
 vendor/          libgomp.so.1, which LightGBM needs on Vercel
 docs/            README media
 ```
 
 ## Reproducing
+
+To look at the data without scraping, `data/sample/listings_sample.csv` holds
+200 random rows of the cleaned table: year, mileage_km, fuel, transmission,
+city, brand, model, price (DH) and is_dealer. Brand and model are blank where
+the title-based extraction found nothing; no titles, URLs or IDs are included.
 
 Scraping and training need the optional dependency groups:
 
