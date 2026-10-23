@@ -24,6 +24,7 @@ Why longest-brand-first matching:
 
 import re
 import unicodedata
+
 import pandas as pd
 
 
@@ -120,7 +121,7 @@ MODEL_TO_BRAND = {
 # longest-first again, same reasoning as brand matching: "classe a" must be
 # tried before the bare "classe" fallback
 _MODELS_SORTED = sorted(
-    (_strip_accents(m) for m in MODEL_TO_BRAND.keys()), key=len, reverse=True
+    (_strip_accents(m) for m in MODEL_TO_BRAND), key=len, reverse=True
 )
 _MODEL_PATTERN = re.compile(
     r"\b(" + "|".join(re.escape(m) for m in _MODELS_SORTED) + r")\b",
@@ -451,8 +452,8 @@ def leakage_report(df: pd.DataFrame) -> None:
     real_dupe_groups = group_sizes[
         (group_sizes > 1) & (~group_sizes.index.str.startswith("unique_"))
     ]
-    print(f"Largest duplicate groups (top 10) -- inspect these for "
-          f"plausibility:")
+    print("Largest duplicate groups (top 10) -- inspect these for "
+          "plausibility:")
     for fp, size in real_dupe_groups.head(10).items():
         print(f"  x{size}  {fp}")
 

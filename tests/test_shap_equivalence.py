@@ -17,7 +17,6 @@ import sys
 
 import numpy as np
 import pytest
-
 from feature_builder import build_matrix
 from predict import _row_from_input, load_artifact
 

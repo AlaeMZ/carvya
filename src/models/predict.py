@@ -55,8 +55,9 @@ def _ensure_libgomp() -> None:
 
 _ensure_libgomp()
 
-from data.features import extract_brand, extract_model
 from feature_builder import build_matrix
+
+from data.features import extract_brand, extract_model
 
 ARTIFACT_PATH = Path("models/price_model.joblib")
 
@@ -302,14 +303,14 @@ def predict_price(
 
 if __name__ == "__main__":
     examples = [
-        dict(title="Dacia Logan Diesel Manuelle 2018 à Casablanca",
-             year=2018, mileage_km=120_000, fuel="Diesel",
-             transmission="Manuelle", city="Casablanca"),
-        dict(title="Mercedes-Benz Classe C 2020", year=2020,
-             mileage_km=60_000, fuel="Diesel",
-             transmission="Automatique", city="Rabat"),
-        dict(title=None, year=2015, mileage_km=180_000, fuel="Essence",
-             transmission="Manuelle", city="Fès"),
+        {"title": "Dacia Logan Diesel Manuelle 2018 à Casablanca",
+         "year": 2018, "mileage_km": 120_000, "fuel": "Diesel",
+         "transmission": "Manuelle", "city": "Casablanca"},
+        {"title": "Mercedes-Benz Classe C 2020", "year": 2020,
+         "mileage_km": 60_000, "fuel": "Diesel",
+         "transmission": "Automatique", "city": "Rabat"},
+        {"title": None, "year": 2015, "mileage_km": 180_000, "fuel": "Essence",
+         "transmission": "Manuelle", "city": "Fès"},
     ]
     for ex in examples:
         result = predict_price(**ex)

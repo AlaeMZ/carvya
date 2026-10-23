@@ -10,7 +10,6 @@ the whole reason predict.py returns a range instead of a bare number.
 """
 
 import pytest
-
 from predict import predict_price
 
 FULL_INFO = {

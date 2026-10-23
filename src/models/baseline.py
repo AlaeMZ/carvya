@@ -23,11 +23,12 @@ Why two baselines, not one:
     complexity.
 """
 
+import sys
+
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 
-import sys
 sys.path.append("src")
 from data.features import add_model_column, build_fingerprint
 

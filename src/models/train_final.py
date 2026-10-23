@@ -32,28 +32,29 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+from lightgbm import LGBMRegressor
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
-from lightgbm import LGBMRegressor
 
 sys.path.append("src")
 sys.path.append("src/models")
 
+from feature_builder import FeatureBuilder, align_columns, build_matrix
+
 from data.features import add_model_column, build_fingerprint
-from feature_builder import FeatureBuilder, build_matrix, align_columns
 
 MODEL_DIR = Path("models")
 ARTIFACT_PATH = MODEL_DIR / "price_model.joblib"
 
-LGBM_PARAMS = dict(
-    n_estimators=600,
-    learning_rate=0.05,
-    num_leaves=63,
-    random_state=42,
-    n_jobs=-1,
-    verbose=-1,
-)
+LGBM_PARAMS = {
+    "n_estimators": 600,
+    "learning_rate": 0.05,
+    "num_leaves": 63,
+    "random_state": 42,
+    "n_jobs": -1,
+    "verbose": -1,
+}
 
 
 def compute_residual_quantiles(df: pd.DataFrame, n_splits: int = 5) -> dict:
@@ -113,7 +114,7 @@ def compute_residual_quantiles(df: pd.DataFrame, n_splits: int = 5) -> dict:
             "p50": float(np.percentile(subset, 50)),
             "p68": float(np.percentile(subset, 68)),
             "p80": float(np.percentile(subset, 80)),
-            "n": int(len(subset)),
+            "n": len(subset),
         }
 
     return {

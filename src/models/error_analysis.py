@@ -22,17 +22,19 @@ Structure mirrors the questions actually worth asking:
 """
 
 import sys
+
 import numpy as np
 import pandas as pd
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
 
 sys.path.append("src")
 sys.path.append("src/models")
 
+from feature_builder import FeatureBuilder, align_columns, build_matrix
+
 from data.features import add_model_column, build_fingerprint
-from feature_builder import FeatureBuilder, build_matrix, align_columns
 
 try:
     from lightgbm import LGBMRegressor
@@ -91,7 +93,7 @@ def get_oof_predictions(df: pd.DataFrame, n_splits: int = 5) -> pd.DataFrame:
         by_bm = train_df.groupby(["brand", "model"])["price_mad"].median()
         by_brand = train_df.groupby("brand")["price_mad"].median()
         oof_source[val_idx] = val_df.apply(
-            lambda r: prediction_source(r, by_bmy, by_bm, by_brand), axis=1
+            prediction_source, axis=1, args=(by_bmy, by_bm, by_brand)
         ).values
 
         builder = FeatureBuilder()

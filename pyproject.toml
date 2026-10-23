@@ -40,6 +40,10 @@ training = [
     "shap>=0.51.0",
 ]
 
+[tool.ruff]
+# Notebooks are exploratory and not linted.
+extend-exclude = ["*.ipynb"]
+
 [tool.pytest.ini_options]
 pythonpath = [".", "src", "src/models"]
 testpaths = ["tests"]

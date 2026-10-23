@@ -31,7 +31,7 @@ STATIC_DIR = Path(__file__).parent / "static"
 sys.path.append("src")
 sys.path.append("src/models")
 
-from predict import predict_price, load_artifact
+from predict import load_artifact, predict_price
 
 
 @asynccontextmanager
@@ -124,8 +124,9 @@ def health() -> dict:
                 art["residual_quantiles"]["overall"]["p50"], 1
             ),
         }
+    # any failure to load the artifact means the service is not ready
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -141,8 +142,9 @@ def predict(req: PredictionRequest) -> dict:
             is_dealer=req.is_dealer,
             n_photos=req.n_photos,
         )
+    # return a JSON error to the frontend instead of a bare 500 page
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

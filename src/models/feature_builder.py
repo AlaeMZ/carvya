@@ -16,7 +16,6 @@ Why a fit/transform class and not a plain add_features(df) function:
     both splits; here it would be the same PRICE INFORMATION in both.
 """
 
-import numpy as np
 import pandas as pd
 
 

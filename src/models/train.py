@@ -26,20 +26,22 @@ Why report mean AND median MAPE:
 """
 
 import sys
+
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import GroupKFold
-from sklearn.linear_model import Ridge
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
+from sklearn.linear_model import Ridge
+from sklearn.model_selection import GroupKFold
+from sklearn.preprocessing import StandardScaler
 
 sys.path.append("src")
 sys.path.append("src/models")
 
-from data.features import add_model_column, build_fingerprint
-from feature_builder import FeatureBuilder, build_matrix, align_columns
 from baseline import cv_baselines
+from feature_builder import FeatureBuilder, align_columns, build_matrix
+
+from data.features import add_model_column, build_fingerprint
 
 try:
     from lightgbm import LGBMRegressor

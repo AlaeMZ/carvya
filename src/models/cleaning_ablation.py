@@ -33,14 +33,15 @@ Run from the repo root (needs the raw SQLite DB):
 
 import sys
 
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
 sys.path.append("src")
 sys.path.append("src/models")
 
-from src.data.clean import clean
+from baseline import cv_baselines
+from train import fit_predict, mape, model_specs, run_cv
+
 from data.features import (
     _BRAND_MODEL_PATTERNS,
     _strip_accents,
@@ -48,8 +49,7 @@ from data.features import (
     add_model_column,
     build_fingerprint,
 )
-from baseline import cv_baselines
-from train import fit_predict, mape, model_specs, run_cv
+from src.data.clean import clean
 
 
 def extract_model_case_preserving(title, brand):
