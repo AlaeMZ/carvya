@@ -57,9 +57,9 @@ curl -X POST http://127.0.0.1:8000/predict \
 
 ```json
 {
-  "estimate_mad": 123800,
-  "range_low_mad": 103400,
-  "range_high_mad": 144100,
+  "estimate_mad": 123300,
+  "range_low_mad": 103000,
+  "range_high_mad": 143500,
   "confidence": "high",
   "detected_brand": "Renault",
   "detected_model": "Clio",
