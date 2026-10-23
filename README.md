@@ -459,7 +459,7 @@ src/data/        clean.py, features.py
 src/models/      baseline, feature_builder, train, train_final, predict,
                  error_analysis, cleaning_ablation
 app/             FastAPI service (main.py) and the static frontend
-tests/           pytest suite
+tests/           pytest suite; fixtures/ holds synthetic scraper and cleaning data
 notebooks/       01_eda.ipynb
 models/          price_model.joblib
 vendor/          libgomp.so.1, which LightGBM needs on Vercel

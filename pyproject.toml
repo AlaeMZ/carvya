@@ -41,7 +41,7 @@ training = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "src/models"]
+pythonpath = [".", "src", "src/models"]
 testpaths = ["tests"]
 
 [tool.vercel]

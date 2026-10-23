@@ -1,0 +1,24 @@
+listing_id,title,price_mad,year,mileage_km,fuel,transmission,city,seller_type,is_shop,is_premium,is_urgent,is_highlighted,is_car_checked,n_photos
+no_price,Dacia Logan Diesel 2015,,2015,150000,Diesel,Manuelle,Casablanca,PRIVATE,0,,,,,3
+price_1dh,Renault Clio Diesel 2012,1,2012,180000,Diesel,Manuelle,Rabat,PRIVATE,0,,,,,2
+price_4999,Renault Clio Essence 2010,4999,2010,200000,Essence,Manuelle,Rabat,PRIVATE,0,,,,,2
+price_5000,Peugeot 206 Essence 2000,5000,2000,300000,Essence,Manuelle,Fes,PRIVATE,0,,,,,1
+price_phone,Fiat Punto 2010,612345678,2010,190000,Diesel,Manuelle,Tanger,PRIVATE,0,,,,,1
+price_5m,Porsche 911 1990,5000000,1990,90000,Essence,Manuelle,Casablanca,STORE,1,1,,,,8
+placeholder_new,Volkswagen Tiguan R-Line 2024,5555,2024,10000,Diesel,Automatique,Casablanca,PRIVATE,0,,,,,5
+placeholder_age8,Kia Sportage 2018,29999,2018,90000,Diesel,Manuelle,Agadir,PRIVATE,0,,,,,4
+recent_at_30000,Kia Picanto 2024,30000,2024,20000,Essence,Manuelle,Agadir,PRIVATE,0,,,,,4
+old_cheap_1987,Peugeot 205 Essence 1987,10000,1987,250000,Essence,Manuelle,Meknes,PRIVATE,0,,,,,2
+age9_cheap,Renault Megane 2017,20000,2017,210000,Diesel,Manuelle,Meknes,PRIVATE,0,,,,,2
+golf_1,Volkswagen Golf 7 2018,150000,2018,100000,Diesel,Manuelle,Casablanca,PRIVATE,0,,,,,6
+golf_2,Volkswagen Golf 7 2018,155000,2018,110000,Diesel,Manuelle,Rabat,PRIVATE,0,,,,,6
+golf_3,Volkswagen Golf 7 2018,160000,2018,95000,Diesel,Manuelle,Fes,PRIVATE,0,,,,,6
+golf_4,Volkswagen Golf 7 2018,165000,2018,80000,Diesel,Automatique,Tanger,PRIVATE,0,,,,,6
+golf_outlier,Volkswagen Golf 7 2018,2700000,2018,120000,Diesel,Manuelle,Marrakech,PRIVATE,0,,,,,6
+logan_1,Dacia Logan 2016,80000,2016,150000,Diesel,Manuelle,Casablanca,PRIVATE,0,,,,,3
+logan_2,Dacia Logan 2016,85000,2016,140000,Diesel,Manuelle,Rabat,PRIVATE,0,,,,,3
+logan_3,Dacia Logan 2016,90000,2016,130000,Diesel,Manuelle,Fes,PRIVATE,0,,,,,3
+logan_outlier,Dacia Logan 2016,1300000,2016,160000,Diesel,Manuelle,Oujda,PRIVATE,0,,,,,3
+low_km_old,Renault Megane 2013,60000,2013,200,Diesel,Manuelle,Kenitra,PRIVATE,0,,,,,2
+low_km_new,Peugeot 208 Essence 2025,185000,2025,113,Essence,Automatique,Rabat,STORE,1,1,,1,1,9
+high_km,Dacia Duster 2012,70000,2012,900000,Diesel,Manuelle,Safi,PRIVATE,0,,,,,2
