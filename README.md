@@ -6,21 +6,17 @@ Half of its estimates land within about 17,000 DH of the seller's asking price; 
 
 Cleaning the data helped, but less than it first appeared: most of the early improvement came from removing junk listings no model could price, not from the model getting smarter.
 
-![demo](docs/demo.gif)
-
 **Live demo:** https://moroccan-car-prices.vercel.app — hosted on Vercel's free tier; the first request after a quiet period can take a few seconds while the model loads.
 
 [![CI](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml/badge.svg)](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml)
 
-Predicts the listing price of a used car in Morocco from public Moroccan car listings.
-
 **Typical error: 13.5% median APE** (25.9% mean) across 22,564 listings.
 
-The data is self-collected — no Kaggle CSV. Most of the interesting work is in
-the scraping and cleaning, not the modelling. Three cleaning fixes affecting
-~1% of rows took reported mean MAPE from 33.6% to 25.9%, but **most of that
-drop came from removing unpredictable junk rows from the test set. Scored on
-the same rows, the cleaner training data is worth 1.3 points of mean MAPE**
+The data is self-collected — no Kaggle CSV. The scraping and cleaning took the
+most work. Three cleaning fixes affecting ~1% of rows took reported mean MAPE
+from 33.6% to 25.9%, but **most of that drop came from removing unpredictable
+junk rows from the test set. Scored on the same rows, the cleaner training data
+is worth 1.3 points of mean MAPE**
 ([details](#how-much-did-the-cleaning-fixes-help)).
 
 ---
