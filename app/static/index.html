@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/styles.css?v=21">
+<link rel="stylesheet" href="/static/styles.css?v=22">
 </head>
 <body>
 
@@ -41,6 +41,7 @@
       preload="auto"
       aria-hidden="true"
     ></video>
+    <div class="media-loader" id="heroLoader" role="status" aria-label="Chargement de la vidéo"></div>
     <div class="hero-media-scrim" aria-hidden="true"></div>
     <div class="hero-media-content">
       <span class="eyebrow" data-reveal>Gratuit · Instantané · Basé sur des milliers d'annonces</span>
@@ -64,6 +65,7 @@
     <div class="rise-sticky">
       <span class="rise-bg-text">22&nbsp;564</span>
       <img class="rise-car" src="/static/media/hero-car-top.png?v=2" alt="Vue du dessus d'une voiture" loading="lazy">
+      <div class="media-loader" id="riseLoader" role="status" aria-label="Chargement de l'image"></div>
     </div>
   </section>
 
@@ -250,6 +252,6 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
-<script src="/static/app.js?v=8"></script>
+<script src="/static/app.js?v=9"></script>
 </body>
 </html>

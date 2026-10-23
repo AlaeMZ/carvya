@@ -52,7 +52,7 @@ const ALL_BRANDS = [...Object.keys(BRAND_MODELS), ...OTHER_BRANDS].sort((a, b) =
 // ---------------------------------------------------------------------------
 // Hero video: skip/stop autoplay for users who asked for reduced motion
 // ---------------------------------------------------------------------------
-const heroVideo = document.querySelector(".hero-video");
+const heroVideo = document.querySelector(".hero-media-video");
 if (heroVideo && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   heroVideo.removeAttribute("autoplay");
   heroVideo.pause();
@@ -63,6 +63,22 @@ if (heroVideo && window.matchMedia("(prefers-reduced-motion: reduce)").matches) 
 // ---------------------------------------------------------------------------
 const riseWrap = document.querySelector(".rise-wrap");
 const riseCar = document.querySelector(".rise-car");
+
+// ---------------------------------------------------------------------------
+// Media loaders: spinner over the hero video / rise car until they can show.
+// Also hidden on error, so a failed load never leaves a spinner stuck.
+// ---------------------------------------------------------------------------
+function hideLoaderWhenReady(media, loader, readyEvent, isReady) {
+  if (!media || !loader) return;
+  const hide = () => loader.classList.add("is-hidden");
+  if (isReady()) return hide(); // already loaded before this script ran
+  media.addEventListener(readyEvent, hide, { once: true });
+  media.addEventListener("error", hide, { once: true });
+}
+hideLoaderWhenReady(heroVideo, document.getElementById("heroLoader"),
+  "loadeddata", () => heroVideo.readyState >= 2);
+hideLoaderWhenReady(riseCar, document.getElementById("riseLoader"),
+  "load", () => riseCar.complete && riseCar.naturalWidth > 0);
 if (riseWrap && riseCar) {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     riseCar.style.transform = "translate(-50%, -50%)";

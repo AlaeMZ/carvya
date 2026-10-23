@@ -597,6 +597,27 @@ a:hover { text-decoration: underline; }
 .btn-spinner { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Spinner shown over the hero video and the rise car until they load */
+.media-loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border: 3px solid var(--border-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  z-index: 2;
+  animation: spin .8s linear infinite;
+  transition: opacity .4s ease, visibility .4s;
+  pointer-events: none;
+}
+.media-loader.is-hidden { opacity: 0; visibility: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .media-loader { animation-duration: 2.4s; }
+}
+
 .error-msg {
   margin: 16px 0 0;
   font-size: 16px;
