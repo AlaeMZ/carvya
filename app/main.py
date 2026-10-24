@@ -153,3 +153,8 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 @app.get("/", include_in_schema=False)
 def root() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/en", include_in_schema=False)
+def root_en() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.en.html")

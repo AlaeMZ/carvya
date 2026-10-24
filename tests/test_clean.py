@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 
 import src.data.clean as clean_module
-from src.scraper.crawl import parse_mileage
+from src.data.clean import parse_mileage
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -63,8 +63,7 @@ def test_peer_ratio_outlier_kept_when_group_too_small(cleaned):
 
 
 def test_mileage_parsed_from_full_value():
-    # The source's numeric value said 120; the formatted text is unambiguous.
-    # This happens in crawl.parse_mileage, upstream of clean.py.
+    # The numeric value said 120; the formatted text is unambiguous.
     assert parse_mileage("120,000 km") == 120_000
     assert parse_mileage("1 500 km") == 1_500
 

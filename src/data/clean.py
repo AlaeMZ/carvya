@@ -7,12 +7,33 @@ Every rule here is a judgement call, documented inline. The raw table is never
 modified, so rules can be revised and this script re-run in seconds.
 """
 
+import re
+import sqlite3
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from src.scraper.store import connect
+# The raw database stays on the author's machine; the collection code is not
+# part of this public repository.
+RAW_DB = Path("data/raw/listings.db")
+MILEAGE_RE = re.compile(r"([\d\s.,]+)\s*km", re.IGNORECASE)
+
+
+def connect(db_path: Path = RAW_DB) -> sqlite3.Connection:
+    return sqlite3.connect(db_path)
+
+
+def parse_mileage(full_value: str | None) -> int | None:
+    """The listing's numeric mileage is inconsistent (sometimes in thousands).
+    The formatted text ("120,000 km") is unambiguous, so parse that instead."""
+    if not full_value:
+        return None
+    m = MILEAGE_RE.search(full_value)
+    if not m:
+        return None
+    digits = re.sub(r"[^\d]", "", m.group(1))
+    return int(digits) if digits else None
 
 OUT_PATH = Path("data/processed/listings_clean.parquet")
 CURRENT_YEAR = 2026

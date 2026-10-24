@@ -166,6 +166,13 @@ a:hover { text-decoration: underline; }
 }
 .nav-cta:hover { background: var(--accent); color: #fff; transform: translateY(-1px); text-decoration: none; box-shadow: var(--glow); }
 
+.lang-switch {
+  font-size: 12px; font-weight: 600; letter-spacing: .06em;
+  color: var(--text-dim); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 6px 10px; transition: color .15s ease, border-color .15s ease;
+}
+.lang-switch:hover { color: var(--text); border-color: var(--accent); text-decoration: none; }
+
 .theme-toggle {
   display: grid;
   place-items: center;

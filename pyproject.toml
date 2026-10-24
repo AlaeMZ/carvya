@@ -1,7 +1,7 @@
 [project]
 name = "moroccan-car-prices"
 version = "0.1.0"
-description = "Used-car price estimation for the Moroccan market from self-collected public listing data"
+description = "Used-car price estimation for the Moroccan market"
 readme = "README.md"
 license = "MIT"
 authors = [
@@ -30,10 +30,6 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.3",
     "seaborn>=0.13.2",
-]
-scraping = [
-    "httpx>=0.28.1",
-    "selectolax>=0.4.11",
 ]
 training = [
     "pyarrow>=25.0.1",

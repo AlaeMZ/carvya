@@ -1,3 +1,40 @@
+// ---- language: the page sets <html lang>; French is the default site, English lives at /en
+const LANG = document.documentElement.lang === "en" ? "en" : "fr";
+const I18N = {
+  fr: {
+    noModels: "— Aucun modèle répertorié —", pickBrand: "— Sélectionnez une marque —", notSpecified: "— Non renseigné —",
+    high: "Confiance élevée", medium: "Confiance moyenne", low: "Confiance faible",
+    estimating: "Estimation…", estimate: "Estimer le prix", typicalError: (p) => `erreur typique ±${String(p).replace(".", ",")} %`,
+    notDetected: "Non détecté", badYear: "Merci d'indiquer une année valide (1970–2027).",
+    waking: "Réveil du serveur… (jusqu'à 1 min)", serverError: (s) => `Erreur serveur (${s})`,
+    noApi: "Impossible de contacter l'API. Vérifiez qu'elle est bien démarrée.",
+  },
+  en: {
+    noModels: "— No models listed —", pickBrand: "— Select a brand first —", notSpecified: "— Not specified —",
+    high: "High confidence", medium: "Medium confidence", low: "Low confidence",
+    estimating: "Estimating…", estimate: "Estimate price", typicalError: (p) => `typical error ±${p}%`,
+    notDetected: "Not detected", badYear: "Please enter a valid year (1970–2027).",
+    waking: "Waking up the server… (up to 1 min)", serverError: (s) => `Server error (${s})`,
+    noApi: "Couldn't reach the API. Check that it is running.",
+  },
+};
+const tr = (k, ...a) => { const v = I18N[LANG][k]; return typeof v === "function" ? v(...a) : v; };
+// The API returns English explanation labels; the French page shows them in French.
+const FEATURE_FR = {
+  "Vehicle age": "Âge du véhicule", "Mileage": "Kilométrage", "Average km per year": "Kilométrage annuel moyen",
+  "Number of photos": "Nombre de photos", "City popularity": "Popularité de la ville", "Brand tier": "Gamme de la marque",
+  "City tier": "Gamme de la ville", "Model popularity": "Popularité du modèle", "Brand identified": "Marque identifiée",
+  "Model identified": "Modèle identifié", "Seller type": "Type de vendeur",
+  "Fuel": "Carburant", "Transmission": "Transmission", "Petrol": "Essence", "Hybrid": "Hybride", "Electric": "Électrique",
+  "Manual": "Manuelle", "Automatic": "Automatique",
+};
+const featureLabel = (s) => {
+  if (LANG === "en") return s;
+  if (FEATURE_FR[s]) return FEATURE_FR[s];
+  const i = s.indexOf(": ");
+  return i < 0 ? s : `${FEATURE_FR[s.slice(0, i)] || s.slice(0, i)} : ${FEATURE_FR[s.slice(i + 2)] || s.slice(i + 2)}`;
+};
+
 // Mirrors src/data/features.py MANUFACTURERS / BRAND_MODELS so the dropdowns
 // only offer values the backend's regex extraction can actually recognise
 // from a constructed title -- picking a brand+model here always lands the
@@ -188,7 +225,7 @@ fontsReady.then(() => {
   requestAnimationFrame(() => requestAnimationFrame(setupReveal));
 });
 
-const fmtMAD = (n) => `${Math.round(n).toLocaleString("en-US")} DH`;
+const fmtMAD = (n) => `${Math.round(n).toLocaleString(LANG === "en" ? "en-US" : "fr-FR")} DH`;
 
 // ---------------------------------------------------------------------------
 // Populate static selects
@@ -221,7 +258,7 @@ function refreshModelOptions() {
     modelSelect.disabled = true;
     const opt = document.createElement("option");
     opt.value = "";
-    opt.textContent = brand ? "— No models listed —" : "— Select a brand first —";
+    opt.textContent = brand ? tr("noModels") : tr("pickBrand");
     modelSelect.appendChild(opt);
     return;
   }
@@ -229,7 +266,7 @@ function refreshModelOptions() {
   modelSelect.disabled = false;
   const blank = document.createElement("option");
   blank.value = "";
-  blank.textContent = "— Not specified —";
+  blank.textContent = tr("notSpecified");
   modelSelect.appendChild(blank);
 
   for (const model of models) {
@@ -315,9 +352,9 @@ const detectedModel = document.getElementById("detectedModel");
 const explanationList = document.getElementById("explanationList");
 
 const CONFIDENCE_LABELS = {
-  high: "High confidence",
-  medium: "Medium confidence",
-  low: "Low confidence",
+  high: tr("high"),
+  medium: tr("medium"),
+  low: tr("low"),
 };
 
 function buildTitle({ brand, model, fuel, transmission, year, city }) {
@@ -334,7 +371,7 @@ function buildTitle({ brand, model, fuel, transmission, year, city }) {
 
 function setLoading(loading) {
   submitBtn.disabled = loading;
-  btnLabel.textContent = loading ? "Estimating…" : "Estimate price";
+  btnLabel.textContent = loading ? tr("estimating") : tr("estimate");
   btnSpinner.style.display = loading ? "inline-block" : "none";
 }
 
@@ -354,7 +391,7 @@ function renderResult(data) {
 
   confidenceBadge.className = `confidence-badge ${data.confidence}`;
   confidenceLabel.textContent = CONFIDENCE_LABELS[data.confidence] || data.confidence;
-  typicalError.textContent = `typical error ±${data.typical_error_pct}%`;
+  typicalError.textContent = tr("typicalError", data.typical_error_pct);
 
   rangeLow.textContent = fmtMAD(data.range_low_mad);
   rangeHigh.textContent = fmtMAD(data.range_high_mad);
@@ -364,7 +401,7 @@ function renderResult(data) {
     detectedBrand.textContent = data.detected_brand;
     detectedBrand.classList.remove("muted");
   } else {
-    detectedBrand.textContent = "Not detected";
+    detectedBrand.textContent = tr("notDetected");
     detectedBrand.classList.add("muted");
   }
 
@@ -372,7 +409,7 @@ function renderResult(data) {
     detectedModel.textContent = data.detected_model;
     detectedModel.classList.remove("muted");
   } else {
-    detectedModel.textContent = "Not detected";
+    detectedModel.textContent = tr("notDetected");
     detectedModel.classList.add("muted");
   }
 
@@ -387,7 +424,7 @@ function renderExplanation(items) {
 
     const label = document.createElement("span");
     label.className = "explanation-label";
-    label.textContent = item.feature;
+    label.textContent = featureLabel(item.feature);
 
     const bar = document.createElement("span");
     bar.className = "explanation-bar";
@@ -422,7 +459,7 @@ form.addEventListener("submit", async (e) => {
   const isDealer = parseInt(isDealerInput.value, 10);
 
   if (!year || year < 1970 || year > 2027) {
-    showError("Please enter a valid year (1970–2027).");
+    showError(tr("badYear"));
     return;
   }
 
@@ -445,7 +482,7 @@ form.addEventListener("submit", async (e) => {
   // few seconds is almost certainly a cold start, not a stuck request --
   // say so, instead of leaving a spinner that looks broken.
   const wakingTimer = setTimeout(() => {
-    btnLabel.textContent = "Waking up the server… (up to 1 min)";
+    btnLabel.textContent = tr("waking");
   }, 4000);
 
   try {
@@ -457,13 +494,13 @@ form.addEventListener("submit", async (e) => {
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      throw new Error(body.detail || `Server error (${res.status})`);
+      throw new Error(body.detail || tr("serverError", res.status));
     }
 
     const data = await res.json();
     renderResult(data);
   } catch (err) {
-    showError(err.message || "Couldn't reach the API. Check that it is running.");
+    showError(err.message || tr("noApi"));
   } finally {
     clearTimeout(wakingTimer);
     setLoading(false);

@@ -1,10 +1,7 @@
 .venv/
 venv/
-# Data stays local, except one small sample of the cleaned table.
+# Data stays local; no listing data is published.
 /data/*
-!/data/sample/
-/data/sample/*
-!/data/sample/listings_sample.csv
 models/*.pkl
 *.db
 .env

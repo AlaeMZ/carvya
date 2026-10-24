@@ -12,7 +12,7 @@ Cleaning the data helped, but less than it first appeared: most of the early imp
 
 **Typical error: 13.5% median APE** (25.9% mean) across 22,564 listings.
 
-The data is self-collected — no Kaggle CSV. The scraping and cleaning took the
+The data is self-collected — no Kaggle CSV. Collecting and cleaning it took the
 most work. Three cleaning fixes affecting ~1% of rows took reported mean MAPE
 from 33.6% to 25.9%, but **most of that drop came from removing unpredictable
 junk rows from the test set. Scored on the same rows, the cleaner training data
@@ -74,53 +74,48 @@ otherwise).
 ## Pipeline
 
 ```
-fetch.py    internet      →  cached HTML on disk
-crawl.py    search pages  →  38 listings per request
-parse.py    JSON          →  Python objects
-store.py    objects       →  SQLite
+collection  public listings →  SQLite (private; not in this repository)
 clean.py    SQLite        →  analysis parquet
 features.py brand/model extraction + leakage fingerprint
 train.py    Ridge / RandomForest / LightGBM on identical folds
 app/main.py FastAPI service
 ```
 
-Each boundary separates something expensive from something volatile. Fetching is
-rate-limited and slow; parsing is free and got rewritten six times while
-exploring the JSON structure. Because HTML was cached first, all six rewrites
-cost zero network requests. The same principle repeats at parse → clean: the raw
-table is never modified, so a revised cleaning threshold is a seconds-long
-re-run rather than a re-scrape.
+Each boundary separates something expensive from something volatile. Collection
+is rate-limited and slow; parsing is cheap and got rewritten six times. Because
+the raw pages were stored first, all six rewrites cost zero extra requests. The
+same principle repeats at the cleaning step: the raw table is never modified, so
+a revised cleaning threshold is a seconds-long re-run rather than a re-collection.
 
 ---
 
 ## Data collection
 
-**29,269 listings in ~45 minutes**, from ~900 search pages.
+**29,269 listings**, collected once, from a random sample of search-result pages.
 
-The original plan was two passes — crawl search pages for listing URLs, then
-fetch each listing individually. That would have been ~35,000 requests and about
-14 hours. Inspection of the page source showed each search-results page already
-embeds **38 complete listing records** in its `__NEXT_DATA__` JSON blob: price,
-year, mileage, transmission, fuel, city, seller type. One pass over 900 search
-pages was enough. **40× fewer requests, and the considerate path turned out to
-be the efficient one.**
+The first plan was two passes: list the search pages, then open every listing.
+Looking at the pages showed that each search page already carries complete,
+structured records for the listings on it (price, year, mileage, fuel, gearbox,
+city, seller type). One pass was enough: **about 40× fewer requests, so the
+considerate approach turned out to be the efficient one.**
 
-Pages were sampled with `random.sample(range(1, 3000), 900)`, not the first 900.
-Search results are ordered, and the ordering correlates with price: priced
-listings run 39% on page 1, 70% on page 2, 82% on page 3, because page 1 is
-dominated by promoted listings that hide prices far more often.
+Pages were sampled at random rather than taken from the top. Search results are
+ordered, and the order correlates with price: page 1 is dominated by promoted
+listings that hide their price far more often, so taking the first pages would
+have biased the data.
 
-**Parsing targets the JSON blob, not CSS selectors.** CSS couples a scraper to
-the presentation layer, which is redesigned constantly and whose class names
-churn on every deploy. The JSON blob couples it to the data model, which changes
-only when the backend API changes.
+Parsing reads that structured data rather than the page layout. The layout is
+redesigned often; the data model changes far less.
 
-### Ethics
+### Data handling
 
-`robots.txt` checked, identifying User-Agent, single-threaded with 2–3.5s
-jittered delays, seller names and phone numbers never extracted (allowlisted
-fields only), phone numbers regex-scrubbed from free-text descriptions at parse
-time.
+- Single-threaded collection with 2–3.5 s delays and an identifying User-Agent.
+- Only allowlisted fields were read. Seller names and phone numbers were never
+  extracted, and phone numbers were scrubbed from free-text descriptions at
+  parse time (Moroccan personal-data law 09-08).
+- No listing data is published here: no rows, titles, URLs or IDs. The
+  collection code is kept private; I'm happy to walk through it in an interview.
+- The live site shows only model estimates, never listings.
 
 ---
 
@@ -178,7 +173,7 @@ rather than spreading out.
 ## Cleaning
 
 ```
-29,269   scraped
+29,269   collected
 -6,046   no price ("prix à débattre" — cannot impute a target)
 -  313   price < 5,000 DH (contact-bait)
 -  102   price > 5,000,000 DH (phone numbers, extra-zero typos)
@@ -270,7 +265,7 @@ fragment). The cost is inheriting brand's coverage ceiling by design.
 
 ## Leakage
 
-The same physical car is relisted repeatedly — a 3-page test crawl found 15 of
+The same physical car is relisted repeatedly — a 3-page test sample found 15 of
 114 listings (13%) appearing on more than one page. A naive `train_test_split`
 would put one copy in train and another in test, and test MAPE would look
 excellent while the model had memorised rather than learned.
@@ -439,7 +434,7 @@ which is the specific check that finding 1's unit bug has not returned.
 
 ## Stack
 
-Python 3.12, uv, httpx, selectolax, SQLite, pandas, pyarrow, scikit-learn,
+Python 3.12, uv, SQLite, pandas, pyarrow, scikit-learn,
 LightGBM, SHAP, FastAPI, Docker.
 
 Dependencies are split so the served app stays small:
@@ -447,7 +442,6 @@ Dependencies are split so the served app stays small:
 | Group | Packages | Needed for |
 |---|---|---|
 | default | fastapi, uvicorn, pandas, scikit-learn, lightgbm, joblib | serving the API |
-| `scraping` | httpx, selectolax | `src/scraper/` |
 | `training` | pyarrow, shap | reading the parquet data, `error_analysis.py` |
 | `dev` | pytest, ruff, jupyter, matplotlib, seaborn | tests, notebooks |
 
@@ -458,38 +452,32 @@ which `tests/test_shap_equivalence.py` checks.
 ## Layout
 
 ```
-src/scraper/     fetch, crawl, parse, store
 src/data/        clean.py, features.py
 src/models/      baseline, feature_builder, train, train_final, predict,
                  error_analysis, cleaning_ablation
 app/             FastAPI service (main.py) and the static frontend
-tests/           pytest suite; fixtures/ holds synthetic scraper and cleaning data
+tests/           pytest suite; fixtures/ holds synthetic cleaning data
 notebooks/       01_eda.ipynb
 models/          price_model.joblib
-data/sample/     200-row sample of the cleaned data (the rest of data/ is not committed)
 vendor/          libgomp.so.1, which LightGBM needs on Vercel
 docs/            README media
 ```
 
 ## Reproducing
 
-To look at the data without scraping, `data/sample/listings_sample.csv` holds
-200 random rows of the cleaned table: year, mileage_km, fuel, transmission,
-city, brand, model, price (DH) and is_dealer. Brand and model are blank where
-the title-based extraction found nothing; no titles, URLs or IDs are included.
-
-Scraping and training need the optional dependency groups:
+The trained model is in `models/price_model.joblib`, so the API and the site run
+without any data:
 
 ```bash
-uv sync --all-groups
-uv run python -m src.scraper.crawl        # ~45 min, hits the source site
-uv run python -m src.data.clean
-uv run python src/models/baseline.py      # baselines on the same folds
-uv run python src/models/train.py         # model comparison
-uv run python -m src.models.cleaning_ablation  # before/after cleaning fixes
-uv run python src/models/train_final.py   # fits and saves the artifact
-uv run python src/models/error_analysis.py
+uv sync
+uv run uvicorn app.main:app --reload     # site at /, English at /en, API docs at /docs
+uv run pytest                            # tests run on synthetic fixtures
 ```
+
+The training scripts (`src/data/clean.py`, `src/models/train_final.py` and the
+others under `src/models/`) document every step, but they need the raw listing
+database, which is not published.
+
 ---
 
 ## License
