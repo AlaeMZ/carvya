@@ -8,7 +8,7 @@ Cleaning the data helped, but less than it first appeared: most of the early imp
 
 **Live demo:** https://moroccan-car-prices.vercel.app — hosted on Vercel's free tier; the first request after a quiet period can take a few seconds while the model loads.
 
-[![CI](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml/badge.svg)](https://github.com/AlaeMZ/moroccan-car-prices/actions/workflows/ci.yml)
+[![CI](https://github.com/AlaeMZ/carvya/actions/workflows/ci.yml/badge.svg)](https://github.com/AlaeMZ/carvya/actions/workflows/ci.yml)
 
 **Typical error: 13.5% median APE** (25.9% mean) across 22,564 listings.
 
