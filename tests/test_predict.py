@@ -59,8 +59,8 @@ def test_explanation_never_shows_an_unselected_category():
     # appear -- it reads as if that category applied to this car.
     result = predict_price(**FULL_INFO)
     labels = {item["feature"] for item in result["explanation"]}
-    assert "Transmission : Automatique" not in labels
-    assert "Carburant : Essence" not in labels
+    assert "Transmission: Automatic" not in labels
+    assert "Fuel: Petrol" not in labels
 
 
 def test_range_brackets_the_point_estimate():

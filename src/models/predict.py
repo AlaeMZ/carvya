@@ -86,27 +86,36 @@ CURRENT_YEAR = 2026
 # flags from scraped rows) -- showing those in a per-request explanation
 # would look like a hidden factor the user has no way to act on.
 FEATURE_LABELS: dict[str, str] = {
-    "age": "Âge du véhicule",
-    "mileage_km": "Kilométrage",
-    "km_per_year": "Kilométrage annuel moyen",
-    "n_photos": "Nombre de photos",
-    "city_freq": "Popularité de la ville",
-    "brand_tier": "Gamme de la marque",
-    "city_tier": "Gamme de la ville",
-    "model_frequency": "Popularité du modèle",
-    "brand_known": "Marque identifiée",
-    "model_known": "Modèle identifié",
-    "is_dealer": "Type de vendeur",
+    "age": "Vehicle age",
+    "mileage_km": "Mileage",
+    "km_per_year": "Average km per year",
+    "n_photos": "Number of photos",
+    "city_freq": "City popularity",
+    "brand_tier": "Brand tier",
+    "city_tier": "City tier",
+    "model_frequency": "Model popularity",
+    "brand_known": "Brand identified",
+    "model_known": "Model identified",
+    "is_dealer": "Seller type",
 }
 CATEGORICAL_LABELS: dict[str, str] = {
-    "fuel": "Carburant",
+    "fuel": "Fuel",
     "transmission": "Transmission",
+}
+# English display names for the (French) category values the model was trained on.
+VALUE_LABELS: dict[str, str] = {
+    "Essence": "Petrol",
+    "Hybride": "Hybrid",
+    "Electrique": "Electric",
+    "Lpg": "LPG",
+    "Manuelle": "Manual",
+    "Automatique": "Automatic",
 }
 
 
 def _humanize_feature(col: str) -> str | None:
     """
-    Maps a raw model column name to a French label for display, or None
+    Maps a raw model column name to an English label for display, or None
     if this column should not be shown to the end user (see FEATURE_LABELS
     docstring above).
     """
@@ -118,7 +127,7 @@ def _humanize_feature(col: str) -> str | None:
             value = col[len(prefix) + 1:]
             if value == "nan":
                 return None
-            return f"{label} : {value}"
+            return f"{label}: {VALUE_LABELS.get(value, value)}"
 
     return None
 

@@ -113,7 +113,7 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && window.Len
   }
   requestAnimationFrame(raf);
 
-  // Keep in-page anchor links (e.g. the "Estimer" nav CTA) working smoothly.
+  // Keep in-page anchor links (e.g. the "Estimate" nav CTA) working smoothly.
   document.querySelectorAll('a[href^="#"]').forEach((link) => {
     link.addEventListener("click", (e) => {
       const target = document.querySelector(link.getAttribute("href"));
@@ -188,7 +188,7 @@ fontsReady.then(() => {
   requestAnimationFrame(() => requestAnimationFrame(setupReveal));
 });
 
-const fmtMAD = (n) => `${Math.round(n).toLocaleString("fr-FR")} DH`;
+const fmtMAD = (n) => `${Math.round(n).toLocaleString("en-US")} DH`;
 
 // ---------------------------------------------------------------------------
 // Populate static selects
@@ -221,7 +221,7 @@ function refreshModelOptions() {
     modelSelect.disabled = true;
     const opt = document.createElement("option");
     opt.value = "";
-    opt.textContent = brand ? "— Aucun modèle répertorié —" : "— Sélectionnez une marque —";
+    opt.textContent = brand ? "— No models listed —" : "— Select a brand first —";
     modelSelect.appendChild(opt);
     return;
   }
@@ -229,7 +229,7 @@ function refreshModelOptions() {
   modelSelect.disabled = false;
   const blank = document.createElement("option");
   blank.value = "";
-  blank.textContent = "— Non renseigné —";
+  blank.textContent = "— Not specified —";
   modelSelect.appendChild(blank);
 
   for (const model of models) {
@@ -315,9 +315,9 @@ const detectedModel = document.getElementById("detectedModel");
 const explanationList = document.getElementById("explanationList");
 
 const CONFIDENCE_LABELS = {
-  high: "Confiance élevée",
-  medium: "Confiance moyenne",
-  low: "Confiance faible",
+  high: "High confidence",
+  medium: "Medium confidence",
+  low: "Low confidence",
 };
 
 function buildTitle({ brand, model, fuel, transmission, year, city }) {
@@ -327,13 +327,14 @@ function buildTitle({ brand, model, fuel, transmission, year, city }) {
   if (fuel) parts.push(fuel);
   if (transmission) parts.push(transmission);
   parts.push(String(year));
+  // The title is model input: it mimics a French classified-ad title, so it stays in French.
   if (city) parts.push(`à ${city}`);
   return parts.join(" ");
 }
 
 function setLoading(loading) {
   submitBtn.disabled = loading;
-  btnLabel.textContent = loading ? "Estimation…" : "Estimer le prix";
+  btnLabel.textContent = loading ? "Estimating…" : "Estimate price";
   btnSpinner.style.display = loading ? "inline-block" : "none";
 }
 
@@ -353,7 +354,7 @@ function renderResult(data) {
 
   confidenceBadge.className = `confidence-badge ${data.confidence}`;
   confidenceLabel.textContent = CONFIDENCE_LABELS[data.confidence] || data.confidence;
-  typicalError.textContent = `erreur typique ±${data.typical_error_pct}%`;
+  typicalError.textContent = `typical error ±${data.typical_error_pct}%`;
 
   rangeLow.textContent = fmtMAD(data.range_low_mad);
   rangeHigh.textContent = fmtMAD(data.range_high_mad);
@@ -363,7 +364,7 @@ function renderResult(data) {
     detectedBrand.textContent = data.detected_brand;
     detectedBrand.classList.remove("muted");
   } else {
-    detectedBrand.textContent = "Non détecté";
+    detectedBrand.textContent = "Not detected";
     detectedBrand.classList.add("muted");
   }
 
@@ -371,7 +372,7 @@ function renderResult(data) {
     detectedModel.textContent = data.detected_model;
     detectedModel.classList.remove("muted");
   } else {
-    detectedModel.textContent = "Non détecté";
+    detectedModel.textContent = "Not detected";
     detectedModel.classList.add("muted");
   }
 
@@ -421,7 +422,7 @@ form.addEventListener("submit", async (e) => {
   const isDealer = parseInt(isDealerInput.value, 10);
 
   if (!year || year < 1970 || year > 2027) {
-    showError("Merci d'indiquer une année valide (1970–2027).");
+    showError("Please enter a valid year (1970–2027).");
     return;
   }
 
@@ -444,7 +445,7 @@ form.addEventListener("submit", async (e) => {
   // few seconds is almost certainly a cold start, not a stuck request --
   // say so, instead of leaving a spinner that looks broken.
   const wakingTimer = setTimeout(() => {
-    btnLabel.textContent = "Réveil du serveur… (jusqu'à 1 min)";
+    btnLabel.textContent = "Waking up the server… (up to 1 min)";
   }, 4000);
 
   try {
@@ -456,13 +457,13 @@ form.addEventListener("submit", async (e) => {
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      throw new Error(body.detail || `Erreur serveur (${res.status})`);
+      throw new Error(body.detail || `Server error (${res.status})`);
     }
 
     const data = await res.json();
     renderResult(data);
   } catch (err) {
-    showError(err.message || "Impossible de contacter l'API. Vérifiez qu'elle est bien démarrée.");
+    showError(err.message || "Couldn't reach the API. Check that it is running.");
   } finally {
     clearTimeout(wakingTimer);
     setLoading(false);
