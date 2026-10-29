@@ -127,8 +127,8 @@ None of this was visible from the schema. All of it came from reading values.
 
 **1. Mileage units are inconsistent.** The same field holds `113` (a 2023 car
 genuinely at 113 km), `200000`, and `120` meaning 120,000 — with no flag
-distinguishing them. *Fix:* parse the formatted `fullValue` string rather than
-the numeric field, because the formatting is unambiguous. Counterintuitively,
+distinguishing them. *Fix:* parse the formatted mileage text (e.g. `"120,000 km"`)
+rather than the numeric field, because the formatting is unambiguous. Counterintuitively,
 the display text carried more information than the clean number.
 
 *If missed:* this destroys the mileage signal rather than inverting it.
@@ -150,8 +150,8 @@ the site's contact rules.
 inspection disproved it. Treated as NaN — guessing a magnitude would fabricate
 data, and LightGBM handles NaN natively.
 
-**5. `is_premium` NULL means false, not unknown.** 98.9% NULL, and **zero**
-explicit `0`s — the source omits the key entirely when false. So `fillna(0)` recovers
+**5. The paid-promotion flag: NULL means false, not unknown.** 98.9% NULL, and **zero**
+explicit `0`s — the field is simply absent when false. So `fillna(0)` recovers
 a real feature. Contrast with a NULL price, which is genuinely unknown and gets
 the row dropped. Same NULL, opposite treatment; the difference comes from
 understanding the source encoding, not from the statistics.
@@ -422,7 +422,7 @@ which is the specific check that finding 1's unit bug has not returned.
    survives the age-8 cutoff.
 4. **Non-cars in the dataset.** Worst-prediction dumps surfaced an electric
    wheelchair, a cargo triporteur, a Kymco quad, spare parts, and apartment
-   listings, all posted under `voitures_d_occasion`. These need a title-based
+   listings, all posted in the used-car category. These need a title-based
    category filter, not a price rule.
 5. **Dealer pricing is under-sampled** (finding 6). Dealer MAPE is *better* than
    private (18.6% vs 26.3%), but these are only the 51% of dealers who disclosed
