@@ -1,0 +1,28 @@
+# The deployed API needs only app/, src/, models/price_model.joblib,
+# vendor/libgomp.so.1, pyproject.toml, uv.lock and .python-version.
+# Patterns are anchored with a leading "/" so /data does not also match
+# src/data/, which the API imports.
+
+# Listing data, raw pages and the SQLite database (never deployed)
+/data
+*.db
+*.parquet
+
+# Exploration dumps of scraped page JSON
+/explore_json.py
+/next_data_sample.json
+/ad_object.json
+
+# Not used at runtime
+/notebooks
+/tests
+/docs
+/Dockerfile
+
+# Local environments, caches and secrets
+/.venv
+/venv
+/.pytest_cache
+/.ruff_cache
+__pycache__
+.env*
