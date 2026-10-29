@@ -163,12 +163,11 @@ the dealer share from 8.2% to 5.4%, so the model is calibrated mainly to
 private-seller pricing. Cannot be fixed by imputation; the prices do not exist
 in the source.
 
-**7. Sellers mix centimes and dirhams.** One flagged row reads *"Dacia Logan à
-vendre, prix convenable 13 millions"* with a price of 1,300,000. The seller
-means 13 million **centimes** — 130,000 DH — which is ordinary Moroccan speech
-for car prices. Entered into a dirham field, it inflates by ~10×. This is why
-the flagged outlier ratios cluster tightly around 10–11× their peer median
-rather than spreading out.
+**7. Sellers mix centimes and dirhams.** One seller wrote "13 millions" meaning
+13 million **centimes** (130,000 DH), which is ordinary Moroccan speech for car
+prices, and the price field read 1,300,000. Entered into a dirham field, it
+inflates by ~10×. This is why the flagged outlier ratios cluster tightly
+around 10–11× their peer median rather than spreading out.
 
 ---
 
