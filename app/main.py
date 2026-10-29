@@ -48,8 +48,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Moroccan Used Car Price Estimator",
     description=(
-        "Estimates the listing price of a used car in Morocco from "
-        "public Moroccan car listings. Returns a range, not a point estimate. "
+        "Estimates the listing price of a used car in Morocco. "
+        "Trained on publicly available Moroccan car listings, for academic research. "
+        "Contact me for any removal request. "
+        "Returns a range, not a point estimate. "
         "Note: trained on ASKING prices, which typically run above "
         "final transaction prices."
     ),
