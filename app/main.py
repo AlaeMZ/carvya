@@ -50,7 +50,7 @@ app = FastAPI(
     description=(
         "Estimates the listing price of a used car in Morocco. "
         "Trained on publicly available Moroccan car listings, for academic research. "
-        "Contact me for any removal request. "
+        "[Contact me](https://github.com/AlaeMZ/carvya/issues) for any removal request. "
         "Returns a range, not a point estimate. "
         "Note: trained on ASKING prices, which typically run above "
         "final transaction prices."

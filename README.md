@@ -2,7 +2,7 @@
 
 I built a website that estimates what a used car is worth in Morocco, trained on about 22,500 public used-car listings from Moroccan classifieds that I collected myself.
 
-Trained on publicly available Moroccan car listings, for academic research. Contact me for any removal request.
+Trained on publicly available Moroccan car listings, for academic research. [Contact me](https://github.com/AlaeMZ/carvya/issues) for any removal request.
 
 Half of its estimates land within about 17,000 DH of the seller's asking price; the typical car in the data is listed at 138,000 DH.
 
