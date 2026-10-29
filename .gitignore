@@ -11,3 +11,5 @@ __pycache__/
 explore_json.py
 next_data_sample.json
 ad_object.json
+.vercel
+.env*
